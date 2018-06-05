@@ -1,0 +1,37 @@
+---- get_pll_freq Matches (9 in 5 files) ----
+armv7_pmu.c (G:\nexell\...\drivers):119
+	g_cycle_period_ps = (1000000/(get_pll_freq(PLLCPU)/1000000));
+
+	/* step xx. performance management unit initialize */
+cmu.c (G:\nexell\...\clock):77
+	return (int)(get_pll_freq(mux) / div);
+}
+
+cmu.c (G:\nexell\...\clock):110
+	return (int)(get_pll_freq(mux) / div);
+}
+
+cmu.c (G:\nexell\...\clock):150
+		pll = get_pll_freq(i);
+		div = (pll / req_freq);
+
+cmu.c (G:\nexell\...\clock):172
+	return (get_pll_freq(mux)/ s_div / y_div);
+}
+
+nxp3220_bl1.map (G:\nexell\...\out):114
+                0x00000000ffff0480                get_pll_freq
+                0x00000000ffff051c                nx_change_pll
+                0x00000000ffff05bc                pll_initialize
+nxp3220_bl1.map (G:\nexell\...\out):1071
+get_pll_freq                                      obj/pll.o
+                                                  obj/cmu.o
+                                                  obj/armv7_pmu.o
+pll.c (G:\nexell\...\clock):96
+int get_pll_freq(int num)
+{
+	struct nx_pll_reg *base
+pll.h (G:\nexell\...\clock):64
+int get_pll_freq(int num);
+int nx_change_pll(int index, int pm, int sk, int sscg);
+int pll_initialize(void);
