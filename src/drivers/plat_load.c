@@ -80,12 +80,12 @@ int plat_next_load(struct nx_bootmanager *pbm, unsigned int option)
 
 	switch (device) {
 		case EMMCBOOT:
-			SYSMSG("Loading from eMMC...\n");
+			SYSMSG("Loading from eMMC...\r\n");
 			ret = emmcboot(pbm, option);
 			break;
 
 		case USBBOOT:
-			SYSMSG("\nLoading from USB...\n");
+			SYSMSG("\nLoading from USB...\r\n");
 			ret = usbboot(pbm);
 			break;
 #if 0		/* todo */
@@ -95,7 +95,7 @@ int plat_next_load(struct nx_bootmanager *pbm, unsigned int option)
 			break;
 #endif
 		case SDBOOT:
-			SYSMSG("Loading from SD...\n");
+			SYSMSG("Loading from SD...\r\n");
 			ret = sdxcboot(pbm, option);
 			break;
 
@@ -105,17 +105,17 @@ int plat_next_load(struct nx_bootmanager *pbm, unsigned int option)
 			break;
 
 		case SPIBOOT:
-			SYSMSG("Loading from SPI...\n");
+			SYSMSG("Loading from SPI...\r\n");
 			ret = spiboot(pbm, option);
 			break;
 
 		case UARTBOOT:
-			SYSMSG("Loading from UART...\n");
+			SYSMSG("Loading from UART...\r\n");
 			ret = uartboot(pbm, option);
 			break;
 
 		default:
-			SYSMSG("Not Support Boot Mode!!! (%X) \n", device);
+			SYSMSG("Not Support Boot Mode!!! (%X) \r\n", device);
 			break;
 
 	}

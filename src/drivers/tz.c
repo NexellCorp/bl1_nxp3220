@@ -18,10 +18,10 @@
 union tzinfo_reg sys_buscfg[5] = {
 	/* sys_buscfg[0] -> BUSCFG6 */
 	[0].bit = {
-		SECURE_ONLY, SECURE_ONLY, SECURE_ONLY, SECURE_ONLY,		/* [00]:AXIM_MDMA_0, [01]: AXIM_MP2TSI_1, [02]: AXIM_MP2TSI_0, [03]: RSVD		*/
-		SECURE_ONLY, SECURE_ONLY, SECURE_ONLY, SECURE_ONLY,		/* [04]:AXIM_SSS_0,  [05]: RSVD,          [06]: RSVD,          [07]: AXIM_CSSYS_0	*/
-		SECURE_ONLY, SECURE_ONLY, SECURE_ONLY, SECURE_ONLY,		/* [08]:AXIM_PDM_0,  [09]: AXIM_SDMA_1,   [10]: AXIM_SDMA_0,   [11]: AXIM_DMA_1		*/
-		SECURE_ONLY, RESERVED   , RESERVED   , RESERVED   ,		/* [12]:AXIM_DMA_0,  [13:31]: RESERVED   						*/
+		EVERY_ONE  , SECURE_ONLY, SECURE_ONLY, SECURE_ONLY,		/* [00]:AXIM_MDMA_0, [01]: AXIM_MP2TSI_1, [02]: AXIM_MP2TSI_0, [03]: RSVD		*/
+		SECURE_ONLY, SECURE_ONLY, SECURE_ONLY, EVERY_ONE  ,		/* [04]:AXIM_SSS_0,  [05]: RSVD,          [06]: RSVD,          [07]: AXIM_CSSYS_0	*/
+		EVERY_ONE  , EVERY_ONE  , EVERY_ONE  , EVERY_ONE  ,		/* [08]:AXIM_PDM_0,  [09]: AXIM_SDMA_1,   [10]: AXIM_SDMA_0,   [11]: AXIM_DMA_1		*/
+		EVERY_ONE  , RESERVED   , RESERVED   , RESERVED   ,		/* [12]:AXIM_DMA_0,  [13:31]: RESERVED   						*/
 		RESERVED   , RESERVED   , RESERVED   , RESERVED   ,
 		RESERVED   , RESERVED   , RESERVED   , RESERVED   ,
 		RESERVED   , RESERVED   , RESERVED   , RESERVED   ,
@@ -29,14 +29,14 @@ union tzinfo_reg sys_buscfg[5] = {
 	},
 	/* sys_buscfg[1] -> BUSCFG7 */
 	[1].bit = {
-		SECURE_ONLY, SECURE_ONLY, SECURE_ONLY, RESERVED   ,		/* [00]:AXIM_SDMA_0,   		[01]: AXIM_DMA_1,		[02]: AXIM_DMA_0,		[03]: RSVD 				*/
+		EVERY_ONE  , EVERY_ONE  , EVERY_ONE  , RESERVED   ,		/* [00]:AXIM_SDMA_0,   		[01]: AXIM_DMA_1,		[02]: AXIM_DMA_0,		[03]: RSVD 				*/
 		SECURE_ONLY, SECURE_ONLY, RESERVED   , RESERVED   ,		/* [04]:CAN_0__SYSREG__CAN,     [05]: CAN_0__SYSREG__RAM,	[06]: RSVD,			[07]: RSVD				*/
 		SECURE_ONLY, SECURE_ONLY, SECURE_ONLY, SECURE_ONLY,		/* [08]:GPIO_4__SYSREG__SECURE, [09]: GPIO_3__SYSREG__SECURE,	[10]: GPIO_2__SYSREG__SECURE,	[11]: GPIO_1__SYSREG__SECURE		*/
 		SECURE_ONLY, RESERVED   , RESERVED   , EVERY_ONE  ,		/* [12]:GPIO_0__SYSREG__SECURE, [13]: RSVD,			[14]: RSVD,			[15]: GPIO_4				*/
 		EVERY_ONE  , EVERY_ONE  , EVERY_ONE  , EVERY_ONE  ,		/* [16]:GPIO_3,			[17]: GPIO_2,			[18]: GPIO_1,			[19]: GPIO_0				*/
-		RESERVED   , SECURE_ONLY, SECURE_ONLY, SECURE_ONLY,		/* [20]:RSVD,			[21]: SMC_0__SYSREG__CFG,	[22]: CAN_1__SYSREG__CAN,	[23]: CAN_1__SYSREG__RAM		*/
-		SECURE_ONLY, RESERVED   , SECURE_ONLY, SECURE_ONLY,		/* [24]:TMU_0,			[25]: RSVD,     		[26]: SYSCTRLTOP_0__SYSREG__NONSECURE,	[27]: SYSCTRLTOP_0		*/
-		SECURE_ONLY, EVERY_ONE  , SECURE_ONLY, SECURE_ONLY,		/* [28]:ECID_0__SYSREG__SECURE, [29]: ECID_0,			[30]: SYSREG_SYS_0__SYSREG__SECURE,	[31]: SYSREG_SYS_0		*/
+		RESERVED   , EVERY_ONE  , SECURE_ONLY, SECURE_ONLY,		/* [20]:RSVD,			[21]: SMC_0__SYSREG__CFG,	[22]: CAN_1__SYSREG__CAN,	[23]: CAN_1__SYSREG__RAM		*/
+		EVERY_ONE  , RESERVED   , EVERY_ONE  , EVERY_ONE  ,		/* [24]:TMU_0,			[25]: RSVD,     		[26]: SYSCTRLTOP_0__SYSREG__NONSECURE,	[27]: SYSCTRLTOP_0		*/
+		SECURE_ONLY, EVERY_ONE  , EVERY_ONE  , EVERY_ONE  ,		/* [28]:ECID_0__SYSREG__SECURE, [29]: ECID_0,			[30]: SYSREG_SYS_0__SYSREG__SECURE,	[31]: SYSREG_SYS_0		*/
 	},
 	/* sys_buscfg[2] -> BUSCFG8 */
 	[2].bit = {
@@ -62,13 +62,13 @@ union tzinfo_reg sys_buscfg[5] = {
 	},
 	/* sys_buscfg[4] -> BUSCFG10 */
 	[4].bit = {
-		SECURE_ONLY, SECURE_ONLY, SECURE_ONLY, SECURE_ONLY,		/* [00]:SSS_0__SYSREG__SSS,     	[01]: SSS_0__SYSREG__MAILBOX,  		[02]: SSS_0__SYSREG__KEYMAN,		[03]: SYS_BUS_0__SYSREG__ETC_TZPROT				*/
-		SECURE_ONLY, SECURE_ONLY, SECURE_ONLY, SECURE_ONLY,		/* [04]:SYS_BUS_0__SYSREG__DMA_TZPROT,	[05]: SPI_0,	      			[06]: CFG_BUS_0, 			[07]: ETC_BUS_0				*/
-		SECURE_ONLY, RESERVED   , RESERVED   , RESERVED   ,		/* [08]:DMA_BUS_0,			[09]: RSVD,				[10]: RSVD,				[11]: RSVD				*/
+		SECURE_ONLY, SECURE_ONLY, SECURE_ONLY, EVERY_ONE  ,		/* [00]:SSS_0__SYSREG__SSS,     	[01]: SSS_0__SYSREG__MAILBOX,  		[02]: SSS_0__SYSREG__KEYMAN,		[03]: SYS_BUS_0__SYSREG__ETC_TZPROT				*/
+		EVERY_ONE  , SECURE_ONLY, EVERY_ONE  , EVERY_ONE  ,		/* [04]:SYS_BUS_0__SYSREG__DMA_TZPROT,	[05]: SPI_0,	      			[06]: CFG_BUS_0, 			[07]: ETC_BUS_0				*/
+		EVERY_ONE  , RESERVED   , RESERVED   , RESERVED   ,		/* [08]:DMA_BUS_0,			[09]: RSVD,				[10]: RSVD,				[11]: RSVD				*/
 		RESERVED   , RESERVED   , RESERVED   , RESERVED   ,		/* [12]:RSVD,				[13]: RSVD,				[14]: RSVD,				[15]: RSVD				*/
-		SECURE_ONLY, SECURE_ONLY, SECURE_ONLY, SECURE_ONLY,		/* [16]:SYS_BUS_0__SYSREG__CFG_TZPROT,	[17]: SYS_BUS_0__SYSREG__CFG_TZPROT,	[18]: SYS_BUS_0__SYSREG__CFG_TZPROT, 	[19]: SYS_BUS_0__SYSREG__CFG_TZPROT	*/
-		SECURE_ONLY, SECURE_ONLY, SECURE_ONLY, SECURE_ONLY,		/* [20]:SYS_BUS_0__SYSREG__CFG_TZPROT,	[21]: SYS_BUS_0__SYSREG__CFG_TZPROT,	[22]: SYS_BUS_0__SYSREG__CFG_TZPROT,	[23]: SYS_BUS_0__SYSREG__CFG_TZPROT	*/
-		SECURE_ONLY, SECURE_ONLY, RESERVED   , RESERVED   ,		/* [24]:SYS_BUS_0__SYSREG__CFG_TZPROT,	[25]: SYS_BUS_0__SYSREG__CFG_TZPROT,	[26]: RSVD,				[27]: RSVD				*/
+		EVERY_ONE  , EVERY_ONE  , EVERY_ONE  , EVERY_ONE  ,		/* [16]:SYS_BUS_0__SYSREG__CFG_TZPROT,	[17]: SYS_BUS_0__SYSREG__CFG_TZPROT,	[18]: SYS_BUS_0__SYSREG__CFG_TZPROT, 	[19]: SYS_BUS_0__SYSREG__CFG_TZPROT	*/
+		EVERY_ONE  , EVERY_ONE  , EVERY_ONE  , EVERY_ONE  ,		/* [20]:SYS_BUS_0__SYSREG__CFG_TZPROT,	[21]: SYS_BUS_0__SYSREG__CFG_TZPROT,	[22]: SYS_BUS_0__SYSREG__CFG_TZPROT,	[23]: SYS_BUS_0__SYSREG__CFG_TZPROT	*/
+		EVERY_ONE  , EVERY_ONE  , RESERVED   , RESERVED   ,		/* [24]:SYS_BUS_0__SYSREG__CFG_TZPROT,	[25]: SYS_BUS_0__SYSREG__CFG_TZPROT,	[26]: RSVD,				[27]: RSVD				*/
 		RESERVED   , RESERVED	, RESERVED   , RESERVED   ,		/* [28]:RSVD,				[29]: RSVD, 				[30]: RSVD,				[31]: RSVD				*/
 	}
 };
@@ -103,7 +103,7 @@ union tzinfo_reg usb_cfg_bus_secure[2] = {
 	/* usb_cfg_bus_secure[0] -> BUS_SECURE0 */
 	[0].bit = {
 		EVERY_ONE  , EVERY_ONE  , EVERY_ONE  , EVERY_ONE  ,		/* [00]:AXIM_BLK_USB_DATA_BUS_0,	[01]: BLK_USB_DATA_BUS_0,		[02]: USB20HOST_0__SYSREG__OHCI_CFG,	[03]: USB20HOST_0__SYSREG__EHCI_CFG	*/
-		EVERY_ONE  , EVERY_ONE  , EVERY_ONE  , EVERY_ONE  ,		/* [04]:USB20OTG_0__SYSREG__CFG,	[05]: SYSREG_USB_0__SYSREG__SECURE,	[06]: SYSREG_USB_0,			[07]: CMU_USB_0				*/
+		EVERY_ONE  , SECURE_ONLY, EVERY_ONE  , EVERY_ONE  ,		/* [04]:USB20OTG_0__SYSREG__CFG,	[05]: SYSREG_USB_0__SYSREG__SECURE,	[06]: SYSREG_USB_0,			[07]: CMU_USB_0				*/
 		RESERVED   , RESERVED   , RESERVED   , RESERVED   ,		/* [08:31]: RSVD */
 		RESERVED   , RESERVED	, RESERVED   , RESERVED   ,
 		RESERVED   , RESERVED	, RESERVED   , RESERVED   ,
@@ -167,7 +167,7 @@ union tzinfo_reg hsif_bus_secure[2] = {
 		SECURE_ONLY, SECURE_ONLY, EVERY_ONE  , EVERY_ONE  ,		/* [00]:GMAC_RMII_0,		[01]: GMAC_RGMII_0,			[02]: SDMMC_2,		[03]: SDMMC_1 		*/
 		EVERY_ONE  , SECURE_ONLY, SECURE_ONLY, SECURE_ONLY,		/* [04]:SDMMC_0,		[05]: SYSREG_HSIF_0__SYSREG__SECURE,	[06]: SYSREG_HSIF_0,	[07]: RSVD,		*/
 		EVERY_ONE  , SECURE_ONLY, EVERY_ONE  , EVERY_ONE  ,		/* [08]:NANDC_0,		[09]: AXIM_GMAC_RMII_0,			[10]: AXIM_GMAC_RGMII_0,[11]: AXIM_NANDC_0	*/
-		SECURE_ONLY, EVERY_ONE  , EVERY_ONE  , EVERY_ONE  ,		/* [12]:BLK_HSIF_DATA_BUS_0,	[13]: BLK_HSIF_DATA_BUS_0__SYSREG__PL301_0, [14]: AXIM_SDMMC_2,	[15]: AXIM_SDMMC_1	*/
+		EVERY_ONE  , EVERY_ONE  , EVERY_ONE  , EVERY_ONE  ,		/* [12]:BLK_HSIF_DATA_BUS_0,	[13]: BLK_HSIF_DATA_BUS_0__SYSREG__PL301_0, [14]: AXIM_SDMMC_2,	[15]: AXIM_SDMMC_1	*/
 		EVERY_ONE  , RESERVED   , RESERVED   , RESERVED   ,		/* [16]:AXIM_SDMMC_0,	    	[17:31]: RSVD										*/
 		RESERVED   , RESERVED   , RESERVED   , RESERVED   ,
 		RESERVED   , RESERVED   , RESERVED   , RESERVED   ,
@@ -224,7 +224,7 @@ static void set_tzpc(void)
 	mmio_write_32(&base[0x204], sys_buscfg[1].value);
 	mmio_write_32(&base[0x208], sys_buscfg[2].value);
 	mmio_write_32(&base[0x20C], sys_buscfg[3].value);
-//	mmio_write_32(&base[0x220], sys_buscfg[4].value);
+	mmio_write_32(&base[0x220], sys_buscfg[4].value);
 //	mmio_write_32(&base[0x8000], SYS_REGSECURE0);
 //	mmio_write_32(&base[0x8004], SYS_REGSECURE1);
 //	mmio_write_32(&base[0x8008], SYS_REGSECURE2);
@@ -233,7 +233,7 @@ static void set_tzpc(void)
 	mmio_write_32(&base[0x04C], cpu_busctrl[0].value);
 	mmio_write_32(&base[0x050], cpu_busctrl[1].value);
 //	mmio_write_32(&base[0x8000], CPU_REGSECURE0);
-#if 1
+
 	base = (volatile unsigned char *)PHY_BASEADDR_SYSREG_USB;
 	mmio_write_32(&base[0x100], usb_cfg_bus_secure[0].value);
 	mmio_write_32(&base[0x104], usb_cfg_bus_secure[1].value);
@@ -248,13 +248,9 @@ static void set_tzpc(void)
 //	mmio_write_32(&base[0x8004], MM_REGSECURE1);
 
 	base = (volatile unsigned char *)PHY_BASEADDR_SYSREG_HSIF;
-//	mmio_write_32(&base[0x020], hsif_bus_secure[0].value);
-//	mmio_write_32(&base[0x030], hsif_bus_secure[1].value);
-//	mmio_write_32(&base[0x8000], HSIF_REGSECURE0);
-#endif
-	base = (volatile unsigned char *)PHY_BASEADDR_SYSREG_HSIF;
 	mmio_write_32(&base[0x020], hsif_bus_secure[0].value);
 	mmio_write_32(&base[0x030], hsif_bus_secure[1].value);
+//	mmio_write_32(&base[0x8000], HSIF_REGSECURE0);
 }
 
 

@@ -18,6 +18,7 @@
 #include <cmu.h>
 
 /* SDMMC  Boot Code Debug Message */
+#define DBGLOG_ON			1
 #define SDMMC_DRVDBG_ON			1
 
 #if (defined(DBGLOG_ON) && SDMMC_DRVDBG_ON)
@@ -108,16 +109,16 @@ int sdmmc_readboot_sector(sdxcboot_status *pst,
 					 SDXC_RINTSTS_EBE  |
 					 SDXC_RINTSTS_SBE  |
 					 SDXC_RINTSTS_DCRC)) {
-			pbl0fn->printf("Read left = %x\n", count);
+			pbl0fn->printf("Read left = %x\r\n", count);
 
 			if (mmio_read_32(&base->rintsts) & SDXC_RINTSTS_DRTO)
-				pbl0fn->printf("DRTO\n");
+				pbl0fn->printf("DRTO\r\n");
 			if (mmio_read_32(&base->rintsts) & SDXC_RINTSTS_EBE)
-				pbl0fn->printf("EBE\n");
+				pbl0fn->printf("EBE\r\n");
 			if (mmio_read_32(&base->rintsts) & SDXC_RINTSTS_SBE)
-				pbl0fn->printf("SBE\n");
+				pbl0fn->printf("SBE\r\n");
 			if (mmio_read_32(&base->rintsts) & SDXC_RINTSTS_DCRC)
-				pbl0fn->printf("DCRC\n");
+				pbl0fn->printf("DCRC\r\n");
 
 			return FALSE;
 		}
@@ -125,14 +126,14 @@ int sdmmc_readboot_sector(sdxcboot_status *pst,
 		if (mmio_read_32(&base->rintsts) & SDXC_RINTSTS_DTO) {
 			if (count == 0) {
 				mmio_write_32(&base->rintsts, SDXC_RINTSTS_DTO);
-				DRV_DBGOUT("DTO \n");
+				DRV_DBGOUT("DTO \r\n");
 				break;
 			}
 		}
 
 		#if defined(DEBUG)
 		if (mmio_read_32(&base->rintsts) & SDXC_RINTSTS_HTO) {
-			DRV_DBGOUT("HTO \n");
+			DRV_DBGOUT("HTO \r\n");
 			mmio_read_32(&base->rintsts, SDXC_RINTSTS_HTO);
 		}
 		#endif
@@ -163,10 +164,10 @@ int sdmmc_setclock(sdxcboot_status *pst, int enb, unsigned int div)
 				SDXC_STATUS_FSMBUSY)) {
 		#if 1//defined(DEBUG)
 		if (mmio_read_32(&base->status) & SDXC_STATUS_DATABUSY)
-			ERROR("%s : ERROR - Data is busy\n", __func__);
+			ERROR("%s : ERROR - Data is busy\r\n", __func__);
 
 		if (mmio_read_32(&base->status) & SDXC_STATUS_FSMBUSY)
-			ERROR("%s : ERROR - Data Transfer is busy\n", __func__);
+			ERROR("%s : ERROR - Data Transfer is busy\r\n", __func__);
 		#endif
 		while(1);
 	}
@@ -200,7 +201,7 @@ repeat_4 :
 	timeout = 0;
 	while (mmio_read_32(&base->cmd) & SDXC_CMDFLAG_STARTCMD) {
 		if (++timeout > SDMMC_TIMEOUT) {
-			ERROR("CLK TO\n");
+			ERROR("CLK TO\r\n");
 			while(1);
 			return FALSE;
 		}
@@ -232,7 +233,7 @@ repeat_7 :
 	timeout = 0;
 	while (mmio_read_32(&base->cmd) & SDXC_CMDFLAG_STARTCMD) {
 		if (++timeout > SDMMC_TIMEOUT) {
-			ERROR("CLK2 TO\n");
+			ERROR("CLK2 TO\r\n");
 			while(1);
 			return FALSE;
 		}
@@ -354,7 +355,7 @@ int emmcboot_normal(struct nx_bootmanager *pbm, sdxcboot_status *pst,
 		bitwidth = 8;
 	else
 		bitwidth = 4;
-	DRV_DBGOUT("eMMC %s speed %d-bits Normal mode boot.\n",
+	DRV_DBGOUT("eMMC %s speed %d-bits Normal mode boot.\r\n",
 		sd_speed ? "High" : "Normal", bitwidth);
 #if 0
 	mmio_write_32(&base->ctype, 1);						/* Data Bus Width : 0(1-bit), 1(4-bit) */
@@ -434,7 +435,7 @@ int emmcboot_alt(struct nx_bootmanager *pbm, sdxcboot_status *pst,
 		bitwidth = 8;
 	else
 		bitwidth = 4;
-	DRV_DBGOUT("eMMC %s speed %d-bits Alternate mode boot.\n",
+	DRV_DBGOUT("eMMC %s speed %d-bits Alternate mode boot.\r\n",
 		sd_speed ? "High" : "Normal", bitwidth);
 #if 0
 	mmio_write_32(&base->ctype, 1);						/* Data Bus Width : 0(1-bit), 1(4-bit) */
@@ -491,7 +492,7 @@ int sdmmcboot(struct nx_bootmanager* pbm, sdxcboot_status *pbt_st, unsigned int 
 
 	/* step 01-1. open the sd/emmc device */
 	if (TRUE != g_sdmmcfn->sdmmc_open(pbt_st, option)) {
-		ERROR("Device Open Fail\r\n");
+		ERROR("Device Open Fail\r\r\n");
 		goto error;
 	}
 
@@ -531,9 +532,8 @@ int sdmmcboot(struct nx_bootmanager* pbm, sdxcboot_status *pbt_st, unsigned int 
 	} else
 		WARN("not GPT, Read header from sector 1!! \r\n");
 
-	/* @brief: To Do */
 	rsn = (g_nsih->dbi.device_addr / SDMMC_BLOCK_LENGTH);
-	printf("dbi.device_addr: %X(%X), rsn: %d \r\n",
+	DRV_DBGOUT("Device_addr: %X(%X), RSN: %d \r\n",
 		g_nsih->dbi.device_addr, &g_nsih->dbi.device_addr, rsn);
 	/* Header + Hash */
 	if (g_sdmmcfn->sdmmc_read_sectors(pbt_st, rsn++, 1, f_sector) == FALSE) {
@@ -542,13 +542,15 @@ int sdmmcboot(struct nx_bootmanager* pbm, sdxcboot_status *pbt_st, unsigned int 
 	}
 
 	struct sbi_header *pbi = (struct sbi_header *)&pbm->bi;
+	printf("pbi: 0x%08X , g_sdmmcfn->sdmmc_read_sectors: 0x%08X \r\n",
+			pbi, g_sdmmcfn->sdmmc_read_sectors);
 	/* step 01-6. check the nexell signature */
 	if (pbi->signature != HEADER_ID) {
 		ERROR("Not bootable image (%08x).\r\n", pbi->signature);
 		return 0;
 	}
 
-	printf(" load_addr: %x load_size :%x launch_addr: %x. \r\n",
+	DRV_DBGOUT("Load Addr: 0x%X, Load Size:0x%X, Launch Addr: 0x%08X. \r\n",
 		pbi->load_addr, pbi->load_size, pbi->launch_addr);
 
 	/*

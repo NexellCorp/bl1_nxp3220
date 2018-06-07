@@ -50,6 +50,6 @@ struct	nx_pmu_reg {
 
 /* Function Define */
 void pmu_blk_pwrup(unsigned int domain, unsigned int enable);
-void pmu_initialize(void);
+void usb_blk_pwrup(void);
 
 #endif /*__PMU_H__ */

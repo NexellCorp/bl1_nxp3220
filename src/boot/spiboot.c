@@ -115,11 +115,11 @@ int spiboot(struct nx_bootmanager *pbm, unsigned int option)
 	/* step 01. initialize the spi controller */
 	spi_initialize(channel);
 
-	DRV_DBGOUT("%d Step, %d Device Address!! \n", addr_step, flash_addr);
+	DRV_DBGOUT("%d Step, %d Device Address!! \r\n", addr_step, flash_addr);
 
 	/* step 02-1. read the boot-header */
 	read_size = sizeof(struct sbi_header);
-	DRV_DBGOUT("Read Header!! (NSIH) \n");
+	DRV_DBGOUT("Read Header!! (NSIH) \r\n");
 	g_spifn->read_flash(channel, ((unsigned char *)&pbm->bi),
 		flash_addr, read_size, addr_step);
 	flash_addr += read_size;
@@ -131,14 +131,14 @@ int spiboot(struct nx_bootmanager *pbm, unsigned int option)
 	}
 
 	/* step 03. read the hash data */
-	DRV_DBGOUT("Read the Hash!! \n");
+	DRV_DBGOUT("Read the Hash!! \r\n");
 	read_size = sizeof(pbm->rsa_encrypted_sha256_hash);
 	g_spifn->read_flash(channel,
 		((unsigned char*)&pbm->rsa_encrypted_sha256_hash[0]),
 		flash_addr, read_size, addr_step);
 
 	/* step 04. read the boot-image file */
-	DRV_DBGOUT("Read the boot-image !! \n");
+	DRV_DBGOUT("Read the boot-image !! \r\n");
 	read_size = pbm->bi.load_size;
 	g_spifn->read_flash(channel, (unsigned char*)pbm->bi.load_addr,
 		flash_addr, read_size, addr_step);

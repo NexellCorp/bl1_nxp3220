@@ -94,11 +94,11 @@ int authenticate_image(unsigned char *pbootkey,
 			&st_rsa_pubkey, &st_digest, &st_sign);
 
 	if (ret != SSSR_SUCCESS) {
-		ERROR("\nImage has been modified. %08X\n\n", ret);
+		ERROR("\nImage has been modified. %08X\n\r\n", ret);
 		return -1;
 	}
 
-	NOTICE("\nImage signature is valid.\n\n");
+	NOTICE("\nImage signature is valid.\n\r\n");
 
 	return 0;
 }

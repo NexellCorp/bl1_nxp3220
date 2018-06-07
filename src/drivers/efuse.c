@@ -83,8 +83,8 @@ void ecid_parser(struct nx_ecid_info *pei)
 
 void ecid_information(struct nx_ecid_info *pei)
 {
-	DBGOUT("  Lot ID \t Wafer No\tX Pos\tY Pos\tIDS\tRO\tPID\t\tVID \r\n");
-	DBGOUT(" %8s\t%8d\t%d\t%d\t%d\t%d\t%08X\t%08X\r\n",
+	DBGOUT("  Lot ID \t Wafer No\tX Pos\tY Pos\tIDS\tRO\tPID\t\tVID \r\r\n");
+	DBGOUT(" %8s\t%8d\t%d\t%d\t%d\t%d\t%08X\t%08X\r\r\n",
 		pei->str_lotid, pei->wafer_no, pei->x_pos, pei->y_pos, pei->ids,
 		pei->ro, pei->usb_product_id, pei->usb_vendor_id );
 }

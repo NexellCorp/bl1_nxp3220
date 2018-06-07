@@ -16,6 +16,6 @@
 
 void build_information(void)
 {
-	SYSMSG("\n\tBL1 by Nexell Co. : Built on %s %s \n\n", __DATE__, __TIME__);
+	SYSMSG("\n\tBL1 by Nexell Co. : Built on %s %s \r\n\n", __DATE__, __TIME__);
 }
 

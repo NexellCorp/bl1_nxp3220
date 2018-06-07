@@ -16,10 +16,10 @@
 #include <sysheader.h>
 #include <pmu.h>
 #include <serial.h>
-#include <cpupmu.h>
+#include <gpio.h>
 #include <memory.h>
 #include <tz.h>
-#include <sysreg.h>
+#include <cpupmu.h>
 #include <plat_pm.h>
 #include <plat_load.h>
 #include <main.h>
@@ -44,10 +44,11 @@ void param_set_fnptr(void)
 	/* @brief: Parameters to which the BL32 will be delivered. */
 	smc_set_fnptr((void*)bl1_smc_handler);
 }
-#include <alive.h>
+
 void main(void)
 {
 	struct nx_bootmanager bm, *pbm;
+	int device = ((get_boption() >> BOOTMODE) & 0x7);
 	int serial_ch = g_nsih->serial_ch;
 	int s_early = false;
 	int is_resume = 0;
@@ -70,6 +71,10 @@ void main(void)
 
 	cpupmu_initialize();
 
+	/* @brief: Before setting tzpc, turn on power to access usb-block. */
+	if (device != USBBOOT)
+		usb_blk_pwrup();
+
 	tz_initialize();
 
 	nx_gpio_bit_access();
@@ -77,7 +82,9 @@ void main(void)
 	vddpwron_ddr_on();
 
 	/* @brief: NIC400 GPV (DDR Security0 : Slave) */
-	mmio_write_32((PHY_BASEADDR_SYS_BUS_GPV + 0x8), 1);
+	mmio_set_32((PHY_BASEADDR_SYS_BUS_GPV  + 0x8), 1);
+	/* @brief: NIC400 GPV (USB Security0 : Slave) */
+//	mmio_set_32((PHY_BASEADDR_FSYS_BUS_GPV + 0x8), 1);
 
 	plat_load(is_resume, pbm);
 }

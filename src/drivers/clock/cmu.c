@@ -100,7 +100,7 @@ static unsigned int subdiv_get_clkrate(unsigned int index)
 		if (mux == 0)
 			mux += 2;
 		else if (mux == 1) {
-//			ERROR("Do not support 'cpu_backup_blk' \n");
+//			ERROR("Do not support 'cpu_backup_blk' \r\n");
 			return FALSE;
 		}
 	} else	if (get_clk_type(index) == CMU_NAME_DDR) {

@@ -119,7 +119,8 @@
 /* EFuse Base Address */
 #define PHY_BASEADDR_ECID_SECURE_MODULE		0x20070000
 
-/* SYS_BUS_GPV Address */
+/* F/S SYS_BUS_GPV Address */
 #define PHY_BASEADDR_SYS_BUS_GPV		0x21000000
+#define PHY_BASEADDR_FSYS_BUS_GPV		0x21100000
 
 #endif // __CHIP_H__

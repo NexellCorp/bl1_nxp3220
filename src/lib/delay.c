@@ -20,14 +20,7 @@ void udelay(volatile unsigned int us)
 {
 
 #if 1
-#if 0
 	pmu_delay_us(us);
-#else
-	volatile unsigned int i, j;
-
-	for (i = 0; i < 0x1000; i++)
-		for (j = 0; j < 0x100; j++);
-#endif
 #else
 	unsigned int option = get_boption();
 

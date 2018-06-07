@@ -48,7 +48,7 @@ int nandboot(struct nx_bootmanager *pbm, unsigned int option)
 	timeout = 0x1000000;
 	while (!(mmio_read_32(&g_nandc_reg->status) & (1 << 28)) && --timeout);	// Wait for RNB Status
 	if (timeout == 0) {
-		ERROR("Nand is busy for a long time!!\n");
+		ERROR("Nand is busy for a long time!!\r\n");
 		ret = 0;
 		goto error;
 	}
@@ -63,7 +63,7 @@ int nandboot(struct nx_bootmanager *pbm, unsigned int option)
 	ret = g_nand_fn->nand_read(pnbi, (void *)&pbm->bi,
 			sizeof(struct sbi_header));
 	if (ret == 0) {
-		ERROR("Nand boot header read failure!! \n");
+		ERROR("Nand boot header read failure!! \r\n");
 		ret = -1;
 		goto error;
 	}
@@ -79,7 +79,7 @@ int nandboot(struct nx_bootmanager *pbm, unsigned int option)
 			((void *)&pbm->rsa_encrypted_sha256_hash[0]),
 			hash_size);
 	if (ret == 0) {
-		ERROR("Nand boot hash read failure!! \n");
+		ERROR("Nand boot hash read failure!! \r\n");
 		ret = -1;
 		goto error;
 	}
@@ -88,7 +88,7 @@ int nandboot(struct nx_bootmanager *pbm, unsigned int option)
 	ret = g_nand_fn->nand_read(pnbi, (void*)pbm->bi.load_addr,
 		pbm->bi.load_size);
 	if (ret == 0) {
-		ERROR("Nand boot boot-image read failure!! \n");
+		ERROR("Nand boot boot-image read failure!! \r\n");
 		ret = -1;
 		goto error;
 	}
