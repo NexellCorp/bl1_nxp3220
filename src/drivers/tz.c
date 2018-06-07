@@ -56,7 +56,7 @@ union tzinfo_reg sys_buscfg[5] = {
 		SECURE_ONLY, SECURE_ONLY, SECURE_ONLY, SECURE_ONLY,		/* [08]:PDM_0,		[09]: MP2TSI_1,		[10]: MP2TSI_0,		[11]: SPDIFRX_0		*/
 		SECURE_ONLY, SECURE_ONLY, RESERVED   , SECURE_ONLY,		/* [12]:SPDIFTX_0,	[13]: SPI_2,		[14]: SPI_1,		[15]: MDMA_0		*/
 		SECURE_ONLY, SECURE_ONLY, SECURE_ONLY, SECURE_ONLY,		/* [16]:SDMA_1,		[17]: SDMA_0,		[18]: DMA_1,		[19]: DMA_0		*/
-		SECURE_ONLY, SECURE_ONLY, SECURE_ONLY, RESERVED   ,		/* [20]:SECURE_TIMER_0,	[21]: TIMER_0_SYSREG_,	[22]: SSS_0__SYSREG__HOST_KEYMAN, [23:31]: RSVD */
+		SECURE_ONLY, EVERY_ONE  , SECURE_ONLY, RESERVED   ,		/* [20]:SECURE_TIMER_0,	[21]: TIMER_0_SYSREG_,	[22]: SSS_0__SYSREG__HOST_KEYMAN, [23:31]: RSVD */
 		RESERVED   , RESERVED   , RESERVED   , RESERVED   ,
 		RESERVED   , RESERVED   , RESERVED   , RESERVED   ,
 	},
@@ -252,6 +252,9 @@ static void set_tzpc(void)
 //	mmio_write_32(&base[0x030], hsif_bus_secure[1].value);
 //	mmio_write_32(&base[0x8000], HSIF_REGSECURE0);
 #endif
+	base = (volatile unsigned char *)PHY_BASEADDR_SYSREG_HSIF;
+	mmio_write_32(&base[0x020], hsif_bus_secure[0].value);
+	mmio_write_32(&base[0x030], hsif_bus_secure[1].value);
 }
 
 
