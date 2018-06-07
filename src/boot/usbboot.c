@@ -336,15 +336,6 @@ int usbboot(struct nx_bootmanager *pbm)
 	/* step xx. usb core soft reset */
 	mmio_write_32(&g_usbotg_reg->gcsr.grstctl, CORE_SOFT_RESET);
 
-	/* step xx. set the system control register for usb-block */
-	mmio_clear_32(&sysusb_reg->otg_ctrl[0], (1 << 8));			// OTG_i_nUtmiResetSync
-	mmio_clear_32(&sysusb_reg->otg_ctrl[0], (1 << 7));			// OTG_i_nResetSync
-	mmio_set_32(&sysusb_reg->usb20phy_otg0_ctrl[0], (1 << 4));		// USB20PHY_OTG0_i_POR [4]
-
-	/* step xx. set the clock(cmu) for usb-block */
-	cmu_clk_divstop(USB_0_AHB_CLK, FALSE);
-	cmu_clkgrp_enable(USB_0_AHB_CLK, FALSE);
-
 	SYSMSG("USB Download Done.\r\n");
 
 	return true;

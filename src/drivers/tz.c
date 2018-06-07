@@ -36,7 +36,7 @@ union tzinfo_reg sys_buscfg[5] = {
 		EVERY_ONE  , EVERY_ONE  , EVERY_ONE  , EVERY_ONE  ,		/* [16]:GPIO_3,			[17]: GPIO_2,			[18]: GPIO_1,			[19]: GPIO_0				*/
 		RESERVED   , SECURE_ONLY, SECURE_ONLY, SECURE_ONLY,		/* [20]:RSVD,			[21]: SMC_0__SYSREG__CFG,	[22]: CAN_1__SYSREG__CAN,	[23]: CAN_1__SYSREG__RAM		*/
 		SECURE_ONLY, RESERVED   , SECURE_ONLY, SECURE_ONLY,		/* [24]:TMU_0,			[25]: RSVD,     		[26]: SYSCTRLTOP_0__SYSREG__NONSECURE,	[27]: SYSCTRLTOP_0		*/
-		SECURE_ONLY, SECURE_ONLY, SECURE_ONLY, SECURE_ONLY,		/* [28]:ECID_0__SYSREG__SECURE, [29]: ECID_0,			[30]: SYSREG_SYS_0__SYSREG__SECURE,	[31]: SYSREG_SYS_0		*/
+		SECURE_ONLY, EVERY_ONE  , SECURE_ONLY, SECURE_ONLY,		/* [28]:ECID_0__SYSREG__SECURE, [29]: ECID_0,			[30]: SYSREG_SYS_0__SYSREG__SECURE,	[31]: SYSREG_SYS_0		*/
 	},
 	/* sys_buscfg[2] -> BUSCFG8 */
 	[2].bit = {
@@ -56,7 +56,7 @@ union tzinfo_reg sys_buscfg[5] = {
 		SECURE_ONLY, SECURE_ONLY, SECURE_ONLY, SECURE_ONLY,		/* [08]:PDM_0,		[09]: MP2TSI_1,		[10]: MP2TSI_0,		[11]: SPDIFRX_0		*/
 		SECURE_ONLY, SECURE_ONLY, RESERVED   , SECURE_ONLY,		/* [12]:SPDIFTX_0,	[13]: SPI_2,		[14]: SPI_1,		[15]: MDMA_0		*/
 		SECURE_ONLY, SECURE_ONLY, SECURE_ONLY, SECURE_ONLY,		/* [16]:SDMA_1,		[17]: SDMA_0,		[18]: DMA_1,		[19]: DMA_0		*/
-		SECURE_ONLY, EVERY_ONE, SECURE_ONLY, RESERVED   ,		/* [20]:SECURE_TIMER_0,	[21]: TIMER_0_SYSREG_,	[22]: SSS_0__SYSREG__HOST_KEYMAN, [23:31]: RSVD */
+		SECURE_ONLY, SECURE_ONLY, SECURE_ONLY, RESERVED   ,		/* [20]:SECURE_TIMER_0,	[21]: TIMER_0_SYSREG_,	[22]: SSS_0__SYSREG__HOST_KEYMAN, [23:31]: RSVD */
 		RESERVED   , RESERVED   , RESERVED   , RESERVED   ,
 		RESERVED   , RESERVED   , RESERVED   , RESERVED   ,
 	},
@@ -233,28 +233,25 @@ static void set_tzpc(void)
 	mmio_write_32(&base[0x04C], cpu_busctrl[0].value);
 	mmio_write_32(&base[0x050], cpu_busctrl[1].value);
 //	mmio_write_32(&base[0x8000], CPU_REGSECURE0);
-#if 0
+#if 1
 	base = (volatile unsigned char *)PHY_BASEADDR_SYSREG_USB;
 	mmio_write_32(&base[0x100], usb_cfg_bus_secure[0].value);
 	mmio_write_32(&base[0x104], usb_cfg_bus_secure[1].value);
-	mmio_write_32(&base[0x8000], USB_REGSECURE0);
-	mmio_write_32(&base[0x8004], USB_REGSECURE1);
+//	mmio_write_32(&base[0x8000], USB_REGSECURE0);
+//	mmio_write_32(&base[0x8004], USB_REGSECURE1);
 
 	base = (volatile unsigned char *)PHY_BASEADDR_SYSREG_MM;
-	mmio_write_32(&base[0x040], mm_bus_secure[0].value);
-	mmio_write_32(&base[0x050], mm_bus_secure[1].value);
-	mmio_write_32(&base[0x060], mm_bus_secure[2].value);
-	mmio_write_32(&base[0x8000], MM_REGSECURE0);
-	mmio_write_32(&base[0x8004], MM_REGSECURE1);
+//	mmio_write_32(&base[0x040], mm_bus_secure[0].value);
+//	mmio_write_32(&base[0x050], mm_bus_secure[1].value);
+//	mmio_write_32(&base[0x060], mm_bus_secure[2].value);
+//	mmio_write_32(&base[0x8000], MM_REGSECURE0);
+//	mmio_write_32(&base[0x8004], MM_REGSECURE1);
 
 	base = (volatile unsigned char *)PHY_BASEADDR_SYSREG_HSIF;
-	mmio_write_32(&base[0x020], hsif_bus_secure[0].value);
-	mmio_write_32(&base[0x030], hsif_bus_secure[1].value);
-	mmio_write_32(&base[0x8000], HSIF_REGSECURE0);
+//	mmio_write_32(&base[0x020], hsif_bus_secure[0].value);
+//	mmio_write_32(&base[0x030], hsif_bus_secure[1].value);
+//	mmio_write_32(&base[0x8000], HSIF_REGSECURE0);
 #endif
-	base = (volatile unsigned char *)PHY_BASEADDR_SYSREG_HSIF;
-	mmio_write_32(&base[0x020], hsif_bus_secure[0].value);
-	mmio_write_32(&base[0x030], hsif_bus_secure[1].value);
 }
 
 
@@ -322,5 +319,5 @@ void tz_initialize(void)
 {
 	set_tzpc();
 //	set_tzasc();
-//	set_tzma();
+	set_tzma();
 }
