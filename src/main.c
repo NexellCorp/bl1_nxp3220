@@ -18,6 +18,7 @@
 #include <serial.h>
 #include <gpio.h>
 #include <memory.h>
+#include <gic.h>
 #include <tz.h>
 #include <cpupmu.h>
 #include <plat_pm.h>
@@ -74,6 +75,8 @@ void main(void)
 	/* @brief: Before setting tzpc, turn on power to access usb-block. */
 	if (device != USBBOOT)
 		usb_blk_pwrup();
+
+	gic_initialize();
 
 	tz_initialize();
 

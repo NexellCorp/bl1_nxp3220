@@ -33,7 +33,7 @@ endif
 
 # Top Names
 PROJECT_NAME			=
-TARGET_NAME			= ${CHIPNAME}_bl1
+TARGET_NAME			= bl1-${CHIPNAME}
 LDS_NAME			= bl1
 
 # Directories

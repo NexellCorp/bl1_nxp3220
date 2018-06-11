@@ -17,9 +17,9 @@
 /*******************************************************************************
  * cpu-interface s/w interface accessors for reading entire registers
  ******************************************************************************/
-unsigned char *gicc_get_baseaddr(void)
+unsigned int gicc_get_baseaddr(void)
 {
-	return ((unsigned char *)PHY_BASEADDR_GICC);
+	return ((unsigned int)PHY_BASEADDR_GICC);
 }
 
 unsigned int gicc_get_iar(void *base)
@@ -45,9 +45,9 @@ void gicc_set_eoir(void *base, int val)
 /*******************************************************************************
  * Distributor interface accessors for reading entire registers
  ******************************************************************************/
-unsigned char *gicd_get_baseaddr(void)
+unsigned int gicd_get_baseaddr(void)
 {
-	return ((unsigned char *)PHY_BASEADDR_GICD);
+	return ((unsigned int)PHY_BASEADDR_GICD);
 }
 
 /*******************************************************************************
@@ -71,37 +71,40 @@ void gicd_set_sgir(void *base, int val)
 /*******************************************************************************
  * Setup the ARM GIC CPU and Distributor interfaces.
 ******************************************************************************/
-#if 0
-void gic_disp_init(void)
+void gic_initialize(void)
 {
-	unsigned int dist_base = gic_disp_get_baseaddr();
-	unsigned int cpu_base = gic_cpuif_get_baseaddr();
+	struct nx_gicd_reg *dbase = (struct nx_gicd_reg *)gicd_get_baseaddr();
+	struct nx_gicc_reg *cbase = (struct nx_gicc_reg *)gicc_get_baseaddr();
+	unsigned int index;
 
-	int nonsecure = 1, secure = 1;
-	int i;
+	/* Interrupt Prioirty Mask */
+	mmio_write_32(&cbase->pmr, 0xFF);
 
-	/* CPU Interface Enable */
-	mmio_write_32((cpu_base + GIC_CPUIF_CTRL), (3 << 0));
+	/* CPU Interface (Secure/Non-Secure) Enable */
+	mmio_write_32(&cbase->ctlr, (3 << 0));
+
+	for (index = 0; index < (0x200/4); index++)
+		mmio_write_32(&dbase->priorityr[index], 0x0);;
+
+	for (index = 0; index < (0x40/4); index++) {
+		mmio_write_32(&dbase->cenabler[index], 0xFFFFFFFF);		/* 0x220C1180 ~ 0x220C11FF */
+		mmio_write_32(&dbase->cpendr[index], 0xFFFFFFFF);		/* 0x220C1280 ~ 0x220C12FF */
+		/*
+		 * GIC set the path that is connected to the
+		 * internal IP interrupts, generated. (0: Secure, 1: Non-Secure)
+		 */
+		mmio_write_32(&dbase->group[index], 0xFFFFFFFF);		/* 0x220C1080 ~ 0x220C10FF */
+	}
+
+	mmio_write_32(&dbase->ctlr, 0x0);
+	for (index = 0; index < (0x200/4); index++)
+		mmio_write_32(&dbase->priorityr[index], 0x80808080);
+
+	mmio_write_32(&dbase->icfgr[9], 0xF5555555);				/* 0xC24 */
 
 	/*
 	 * Whether or not to activate the interrupt
 	 * occurs GROUP0/GROUP1 on the GIC.
 	 */
-	mmio_write_32((dist_base + GIC_DISP_CTRL),
-		(nonsecure << 1) | (secure << 0));
-
-	/*
-	 * secure/non-secure used to determine
-	 * the priority of the interrupt.
-	 */
-	mmio_write_32((cpu_base + GIC_CPUIF_PRIORTY), 0xFFFFFFFF);
-
-	/*
-	 * GIC set the path that is connected to the
-	 * internal IP interrupts, generated. (0: Secure, 1: Non-Secure)
-	 */
-	for (i = 0; i <= 0xC; i += 4)
-		mmio_write_32((dist_base + GIC_DISP_GROUP + i), 0xFFFFFFFF);
-
+	mmio_write_32(&dbase->ctlr, 0x3);
 }
-#endif

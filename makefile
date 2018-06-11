@@ -118,7 +118,7 @@ bin:
 	$(Q)$(MAKEBIN) -O binary $(DIR_TARGETOUTPUT)/$(TARGET_NAME).elf $(DIR_TARGETOUTPUT)/$(TARGET_NAME).bin
 
 gen:
-	./tools/rsa_sign_new -n reference-nsih/nsih_general.txt -i out/${CHIPNAME}_bl1.bin -b tools/bootkey -u tools/userkey -k bl1 -l 0xFFFF0000 -s 0xFFFF0000 -t
+	./tools/rsa_sign_new -n reference-nsih/nsih_general.txt -i out/bl1-${CHIPNAME}.bin -b tools/bootkey -u tools/userkey -k bl1 -l 0xFFFF0000 -s 0xFFFF0000 -t
 
 
 mkobjdir:
