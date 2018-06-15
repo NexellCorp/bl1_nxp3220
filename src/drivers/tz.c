@@ -42,8 +42,8 @@ union tzinfo_reg sys_buscfg[5] = {
 	[2].bit = {
 		EVERY_ONE  , SECURE_ONLY, SECURE_ONLY, EVERY_ONE  ,		/* [00]:PWM_0,		[01]: SECURE_WDT_0,	[02]: WDT_0,	        [03]: I2S_3		*/
 		EVERY_ONE  , EVERY_ONE  , EVERY_ONE  , RESERVED   ,		/* [04]:I2S_2,		[05]: I2S_1,		[06]: I2S_0,		[07]: RSVD		*/
-		EVERY_ONE  , SECURE_ONLY, SECURE_ONLY, SECURE_ONLY,		/* [08]:ADC_0,		[09]: I2C_4,		[10]: I2C_3,		[11]: I2C_2		*/
-		SECURE_ONLY, SECURE_ONLY, RESERVED   , EVERY_ONE  ,		/* [12]:I2C_1,		[13]: I2C_0,		[14]: RSVD,		[15]: UART_6		*/
+		EVERY_ONE  , EVERY_ONE  , EVERY_ONE  , EVERY_ONE  ,		/* [08]:ADC_0,		[09]: I2C_4,		[10]: I2C_3,		[11]: I2C_2		*/
+		EVERY_ONE  , EVERY_ONE  , RESERVED   , EVERY_ONE  ,		/* [12]:I2C_1,		[13]: I2C_0,		[14]: RSVD,		[15]: UART_6		*/
 		EVERY_ONE  , EVERY_ONE  , EVERY_ONE  , EVERY_ONE  ,		/* [16]:UART_5,		[17]: UART_4,		[18]: UART_3,		[19]: UART_2		*/
 		EVERY_ONE  , EVERY_ONE  , SECURE_ONLY, SECURE_ONLY,		/* [20]:UART_1,		[21]: UART_0,		[22]: AXIM_MDMA_0,	[23]: AXIM_PDM_0	*/
 		SECURE_ONLY, SECURE_ONLY, RESERVED   , SECURE_ONLY,		/* [24]:AXIM_MP2TSI_1,	[25]: AXIM_MP2TSI_0,	[26]: RSVD,		[27]: AXIM_SSS_0	*/
