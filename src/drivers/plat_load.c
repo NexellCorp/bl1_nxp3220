@@ -20,6 +20,7 @@
 #include <libnx.h>
 #include <checker.h>
 #include <tz.h>
+#include <sss.h>
 #include <plat_pm.h>
 #include <plat_load.h>
 
@@ -161,12 +162,12 @@ int plat_s_load(struct platform_info *ppi)
 		if (ppi->is_sss_f) {
 			NOTICE("Load the SSS Firmware.. \r\n");
 			g_nsih->dbi.device_addr = SSS_DEVICE_ADDR;
-			success = plat_next_load(pbm, option);
+			success = sss_load(pbm, option);
 			if (success < 0) {
 				WARN("SSS Firmware Load Failed!! (%d) \r\n", success);
 				return -SSS_F_LOAD_FAILED;
 			}
-			success = check_platfrom(pbm, &g_rsa_public_key[256]);
+//			success = check_platfrom(pbm, &g_rsa_public_key[256]);
 		}
 
 		if (is_resume == 0) {

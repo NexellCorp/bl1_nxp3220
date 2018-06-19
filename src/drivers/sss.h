@@ -32,4 +32,7 @@ struct nx_brtdmadesc {
 	unsigned int btdmal;							/* 1C length					*/
 };
 
+/* Function Define */
+ int sss_load(struct nx_bootmanager *pbm, unsigned int option);
+
 #endif /* #ifndef __SSS_H__ */
