@@ -50,6 +50,9 @@ int system_cpu_on(unsigned int cpu_id)
 	if (cpu_id != 1)
 		return -1;
 
+	/* High Vector : To Do */
+	mmio_set_32((0x22030000 + 0x14), ( 0x1 << (4 + 1)));
+
 	dmb();
 	cpu_on_sequence(cpu_id);
 	dmb();

@@ -28,7 +28,6 @@ static void check_pwrup_blk(int domain, int enable)
 	struct nx_sysreg_sys_reg *sysreg =
 		(struct nx_sysreg_sys_reg *)PHY_BASEADDR_SYS_MODULE;
 	unsigned int ack = enable ? 0 : 1;
-	unsigned int timeout = 0xFFF;
 
 	switch(domain) {
 		case BLOCK_DDR:

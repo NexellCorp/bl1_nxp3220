@@ -37,7 +37,7 @@ void param_set_fnptr(void)
 	g_bl0_fn = ((struct nx_bl0_fnptr *)get_fntpr());
 	memcpy((void*)g_bl1_fn, (void*)g_bl0_fn, sizeof(struct nx_bl0_fnptr));
 	g_bl1_fn->lib_fn.printchar = printchar;
-	set_fnptr(g_bl1_fn);
+	set_fnptr((int)g_bl1_fn);
 
 	/* @breif: set the popular gloval variables */
 	g_mbedtls = ((struct nx_mbedtls_fnptr *)&g_bl1_fn->mbedtls_fn);
