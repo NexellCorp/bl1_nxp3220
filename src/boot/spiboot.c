@@ -17,7 +17,7 @@
 #include <cmu.h>
 
 /* SPI  Boot Code Debug Message */
-#define SPI_DRVDBG_ON			0
+#define SPI_DRVDBG_ON			1
 
 #if (defined(DBGLOG_ON) && SPI_DRVDBG_ON)
 #define DRV_DBGOUT(...)		printf("DEBUG-SPI :  ", __VA_ARGS__)
@@ -50,13 +50,16 @@ static int spi_get_baseaddr(int channel)
 
 static int set_spiclk(int channel, int freq)
 {
+	cmu_clkgrp_enable(g_clk_num[channel][0], TRUE);
+	cmu_clkgrp_enable(g_clk_num[channel][1], TRUE);
+
 	/* step xx. set the spi - apb clock (default) */
 	cmu_set_rate(g_clk_num[channel][0], SPI_SRCCLK_FREQ);
 
 	return cmu_set_rate(g_clk_num[channel][1], freq);
 }
 
-void spi_initialize(int channel)
+void spi_initialize(unsigned int channel)
 {
 	int reg_value;
 
@@ -82,7 +85,7 @@ void spi_initialize(int channel)
 		     (0 << 12) |						/* Microwire frame format control word				*/
 		     (0 << 11) |						/* internal loopback - test mode only				*/
 		     (0 << 10) |						/* slave output enable						*/
-		     (3 <<  8) |						/* transfer mode. 0:trx, 1:tx, 2:rx, 3:eeprom read mode		*/
+		     (0 <<  8) |						/* transfer mode. 0:trx, 1:tx, 2:rx, 3:eeprom read mode		*/
 		     (0 <<  7) |						/* serial clock prlarity. 0:low inactive, 1:high		*/
 		     (0 <<  6) |						/* serial clock phase. 0:middle, 1:start			*/
 		     (0 <<  4) |						/* frame format. 0:motorola, 1:texas, 2:Microwire		*/
@@ -100,8 +103,8 @@ void spi_initialize(int channel)
 int spiboot(struct nx_bootmanager *pbm, unsigned int option)
 {
 	int channel = (option >> SELSPIPORT) & 0x3;
-	int addr_step = (2 + ((option & 1 << 3) ? 1 : 0));
-	int flash_addr = pbm->bi.dbi.device_addr;
+	int addr_step = (2 + ((option & 1 << SERIALFLASHADDR) ? 0 : 1));
+	int flash_addr = g_nsih->dbi.device_addr;
 	int read_size;
 
 	int ret = 0;
@@ -115,7 +118,7 @@ int spiboot(struct nx_bootmanager *pbm, unsigned int option)
 	/* step 01. initialize the spi controller */
 	spi_initialize(channel);
 
-	DRV_DBGOUT("%d Step, %d Device Address!! \r\n", addr_step, flash_addr);
+	DRV_DBGOUT("%d Step, 0x%08X Device Address!! \r\n", addr_step, flash_addr);
 
 	/* step 02-1. read the boot-header */
 	read_size = sizeof(struct sbi_header);
@@ -136,6 +139,7 @@ int spiboot(struct nx_bootmanager *pbm, unsigned int option)
 	g_spifn->read_flash(channel,
 		((unsigned char*)&pbm->rsa_encrypted_sha256_hash[0]),
 		flash_addr, read_size, addr_step);
+	flash_addr += read_size;
 
 	/* step 04. read the boot-image file */
 	DRV_DBGOUT("Read the boot-image !! \r\n");
@@ -146,7 +150,7 @@ int spiboot(struct nx_bootmanager *pbm, unsigned int option)
 
 error:
 	/* step 07. deintialize the spi controller */
-	g_spifn->spi_deinit(option);
+//	g_spifn->spi_deinit(option);
 
 	return ret;
 }
