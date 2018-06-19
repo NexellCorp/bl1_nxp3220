@@ -12,7 +12,7 @@ LDFLAGS		=	-Bstatic							\
 
 SYS_OBJS	+=	startup.o libnx.o libarmv7.o armv7_pmu.o delay.o cpu_delay.o pll.o cmu.o printf.o pmu.o		\
 			serial.o plat_pm.o gic.o gpio.o efuse.o checker.o libplat.o plat_load.o tz.o cpupmu.o subcpu.o  \
-			build_info.o main.o
+			sss.o build_info.o main.o
 
 # Dispatcher (SMC Call)
 SYS_OBJS	+=	smc_entry.o smc_handler.o sip_main.o std_svc_setup.o			\
