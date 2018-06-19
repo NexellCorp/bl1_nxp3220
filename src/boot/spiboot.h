@@ -14,7 +14,7 @@
 #ifndef __SPIBOOT_H__
 #define __SPIBOOT_H__
 
-void spi_initialize(int channel);
+void spi_initialize(unsigned int channel);
 int spiboot(struct nx_bootmanager *pbm, unsigned int option);
 
 #endif
