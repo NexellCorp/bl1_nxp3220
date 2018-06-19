@@ -44,18 +44,18 @@ ENTRY(smc_asm_handler)
 	 */
 	stmfd	sp!, {r0-r3}
 	/* change the secure-mode */
-	mrc	p15, 0, r0, c1, c1, 0
-	bic	r0, r0, #(1 << 0)
-	mcr	p15, 0, r0, c1, c1, 0
+	mrc	p15, 0, r9, c1, c1, 0
+	bic	r9, r9, #(1 << 0)
+	mcr	p15, 0, r9, c1, c1, 0
 
 	/* load the parameters in the stack */
 	ldmfd	sp!, {r0-r3}
 	bl	bl1_smc_handler
 
 	/* change the non-secure-mode */
-	mrc	p15, 0, r0, c1, c1, 0
-	orr	r0, r0, #(1 << 0)
-	mcr	p15, 0, r0, c1, c1, 0
+	mrc	p15, 0, r9, c1, c1, 0
+	orr	r9, r9, #(1 << 0)
+	mcr	p15, 0, r9, c1, c1, 0
 
 	ldmfd	sp!, {r4-r12, lr}
 	movs	pc, r14

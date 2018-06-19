@@ -33,7 +33,7 @@ int sip_smc_handler(unsigned int smc_fid,
 	unsigned int r1, unsigned int r2, unsigned int r3)
 {
 	r3 = r3;
-
+	int ret = 0;
 	switch (smc_fid) {
 		case SIP_PLATFORM_LOAD:
 			plat_s_load((struct platform_info *)r1);
@@ -44,10 +44,15 @@ int sip_smc_handler(unsigned int smc_fid,
 		case TZPC_ACCESS_DDR:
 			tzpc_set_ddr();
 			break;
+		case SECURE_HWREG_WRITE:
+			return secure_write_32((void*)r1, r2);
+		case SECURE_HWREG_READ:
+			return secure_read_32((void*)r1);
+			break;
 		default:
 			WARN("Unimplemented SIP Service Call: 0x%x\r\n", smc_fid);
 			break;
 	}
 
-	return 0;
+	return ret;
 }

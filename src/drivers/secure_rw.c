@@ -15,19 +15,14 @@
 #include <secure_rw.h>
 
 /* Gloval Variables (To Do..After.. ) */
-static struct s_rw_filter g_s_rw_list[2] =
+static struct s_rw_filter g_s_rw_list[1] =
 {
 	/* Index 0 - Alive GPIO */
 	{
 		PHY_BASEADDR_ALIVE,
-		(PHY_BASEADDR_ALIVE + 0x64),
-		0x0
+		(PHY_BASEADDR_ALIVE + 0x25C),
+		0xFFFFFFFF
 	},
-	{
-		(PHY_BASEADDR_ALIVE + 0x74),
-		(PHY_BASEADDR_ALIVE + 0x94),
-		0x0
-	}
 };
 
 static unsigned int check_rw_list(unsigned int addr, unsigned int value)
@@ -39,7 +34,7 @@ static unsigned int check_rw_list(unsigned int addr, unsigned int value)
 	do {
 		if ((g_s_rw_list[index].start <= addr)
 			&& (g_s_rw_list[index].end >= addr)) {
-			value &= ~g_s_rw_list[index].mask;
+			value &= g_s_rw_list[index].mask;
 			return value;
 		}
 
@@ -58,7 +53,7 @@ int secure_write_32(void *addr, unsigned int value)
 	/* Check the Secure R/W Memory */
 	cal_value = check_rw_list((unsigned int)addr, value);
 
-	return mmio_set_32(addr, cal_value);
+	return mmio_write_32(addr, cal_value);
 }
 
 int secure_read_32(void *addr)
