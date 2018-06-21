@@ -50,6 +50,12 @@ reset_handler:
 
         mov     r3, #0x00000000							@ Prepare zero to clear BSS
 
+	/* Set the SMP Bit for DCache */
+        mrc     p15, 0, r0, c1, c0, 1
+        tst     r0, #BIT_SMP							@ SMP bit
+        orreq   r0, r0, #BIT_SMP
+        mcreq   p15, 0, r0, c1, c0, 1               				@ Write the Aux Control Register
+
 clbss_l:
         cmp     r1, r2								@ while not at end of BSS
         strlo   r3, [r1]							@ clear 32-bit BSS word
