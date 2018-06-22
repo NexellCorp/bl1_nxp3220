@@ -58,6 +58,8 @@ static int set_uclk_source(int freq)
 
 static int set_uclk_enb(int enb)
 {
+	cmu_clkgrp_enable(g_clk_num[0], TRUE);
+	cmu_clkgrp_enable(g_clk_num[1], TRUE);
 //	cmu_clk_enable(g_clk_num[0], enb);
 	cmu_clk_enable(g_clk_num[1], enb);
 

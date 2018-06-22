@@ -25,13 +25,17 @@
 #define DRV_DBGOUT(...)		empty_printf("DEBUG-UART :  ", __VA_ARGS__)
 #endif
 
+static const unsigned int clk_num[2] = {
+	UART_0_APB_CLK, UART_0_CORE_CLK
+};
+
 /* Global Variables */
 static struct nx_uart_fnptr *g_uartfn;
+static xyzsts xyz;
 
 int uartboot(struct nx_bootmanager *pbm, unsigned int option)
 {
 	connection_info_t info;
-	xyzsts xyz;
 
 	unsigned int channel = ((option >> UARTPORT) & 0x7);
 
@@ -39,19 +43,25 @@ int uartboot(struct nx_bootmanager *pbm, unsigned int option)
 	int err, res;
 	int ret = 0;
 
+	info.chan = channel;
 	info.mode = xyzModem_ymodem;
 
 	/* step 00. get the bl0 function-table address */
 	g_uartfn = ((struct nx_uart_fnptr *)&g_bl1_fn->uart_fn);
 
+
 	/* step 01. set the intialize & baudrate */
-	if (pbm->bi.serial_ch != channel)
-		serial_init(channel);
+	if (pbm->bi.serial_ch != channel) {
+		cmu_clkgrp_enable(clk_num[0], TRUE);
+		cmu_clkgrp_enable(clk_num[1], TRUE);
+		g_uartfn->serial_init(option);
+	}
 //	serial_set_baudrate(channel, cmu_get_rate(UART_0_CORE_CLK), baud_rate);
 
 	/* step 02. first protocol handshaking (filename, size) */
 	do {
-		g_uartfn->xyzModem_flush(channel);
+		while (g_uartfn->is_rx_ready(channel))
+			g_uartfn->get_ch(channel);
 		res = g_uartfn->xyzModem_stream_open(&info, &xyz, &err);
 	} while(res);
 
@@ -61,7 +71,7 @@ int uartboot(struct nx_bootmanager *pbm, unsigned int option)
 		size += res;
 	/* step 03-2. check the nexell signature */
 	if (pbm->bi.signature != HEADER_ID) {
-		ERROR("Header Signature Ffail(%08x)\r\n", pbm->bi.signature);
+		ERROR("Header Signature Fail!! (%08x)\r\n", pbm->bi.signature);
 		ret = -1;
 		goto error;
 	}
@@ -76,7 +86,6 @@ int uartboot(struct nx_bootmanager *pbm, unsigned int option)
 	if ((res = g_uartfn->xyzModem_stream_read(&xyz, (char*)pbm->bi.load_addr,
 			(pbm->bi.load_size + 1), &err)) > 0)
 		size += res;
-	ret = g_uartfn->xyzModem_error(err);
 
 	/* step 06. close the ymodem protocol */
 	g_uartfn->xyzModem_stream_close(&err);
@@ -88,8 +97,6 @@ int uartboot(struct nx_bootmanager *pbm, unsigned int option)
 		goto error;
 	}
 error:
-	/* step 09. deinitialize the uartX controller */
-//	serial_deinit();
 
 	return ret;
 }
