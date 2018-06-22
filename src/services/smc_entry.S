@@ -68,14 +68,14 @@ ENDPROC(smc_asm_handler)
 .align 6
 .global monitor_vectors
 monitor_vectors:
-        b       iram_suspend							@ 00 - reset will never get here	*/
-        b       .    								@ 04 -					*/
-        b       smc_asm_handler							@ 08 - SMC Interrupt			*/
-        b       .          							@ 0C -					*/
-        b       .          							@ 10 -					*/
-        b       iram_dev_freq							@ 14 -	No Exception get here		*/
-        b       .                   						@ 18 -					*/
-	b       smc_asm_monitor_fiq_handler					@ 1C - FIQ Interrupt			*/
+        b       iram_suspend							@ 00 - reset will never get here
+        b       .    								@ 04 -
+        b       smc_asm_handler							@ 08 - SMC Interrupt
+        b       .          							@ 0C -
+        b       .          							@ 10 -
+        b       iram_dev_freq							@ 14 -	No Exception get here
+        b       .                   						@ 18 -
+	b       smc_asm_monitor_fiq_handler					@ 1C - FIQ Interrupt
 
 /*
  *  Only Monitor Mode

@@ -17,7 +17,7 @@
 #include <cmu.h>
 
 /* SPI  Boot Code Debug Message */
-#define SPI_DRVDBG_ON			1
+#define SPI_DRVDBG_ON			0
 
 #if (defined(DBGLOG_ON) && SPI_DRVDBG_ON)
 #define DRV_DBGOUT(...)		printf("DEBUG-SPI :  ", __VA_ARGS__)

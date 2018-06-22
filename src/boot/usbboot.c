@@ -99,8 +99,8 @@ void usb_int_bulkout(usbboot_status *pusbbt_st, struct nx_bootmanager *pbm,
 				(unsigned char *)pusbbt_st->rx_addr,
 				fifo_cnt_byte);
 
-//		printf("Bin Packet Size = %x ==> %x, %x\r\n",
-//			pusbbt_st->rx_size, pusbbt_st->rx_addr, pusbbt_st->rx_size);
+		INFO("Bin Packet Size = %x ==> %x, %x\r\n",
+			pusbbt_st->rx_size, pusbbt_st->rx_addr, pusbbt_st->rx_size);
 
 		pusbbt_st->rx_addr += fifo_cnt_byte;
 		pusbbt_st->rx_size -= fifo_cnt_byte;
@@ -260,9 +260,6 @@ int usbboot(struct nx_bootmanager *pbm)
 	/* step xx. The identification information is sent to the endpoint.*/
 	usb_get_identy((unsigned int*)updata);
 
-	/* USB Block Power Enable (PMU) */
-//	pmu_blk_pwrup(BLOCK_USB, TRUE);  //[DEBUG]
-
 	/* step xx. set the system control register for usb-block */
 	mmio_clear_32(&sysusb_reg->usb20phy_otg0_ctrl[0], (1 << 4));		// USB20PHY_OTG0_i_POR [4]
 	mmio_set_32(&sysusb_reg->usb20phy_otg0_ctrl[0], (1 << 3));		// USB20PHY_OTG0_i_POR_ENB [3]
@@ -321,7 +318,6 @@ int usbboot(struct nx_bootmanager *pbm)
 				(WkUpInt | OEPInt | IEPInt | EnumDone |
 				 USBRst | USBSusp | RXFLvl)) {
 			udc_int_hndlr(pusbbt_st, pbm);
-//			g_usbfn->udc_int_hndlr(pusbbt_st, get_boption());
 			mmio_write_32(&g_usbotg_reg->gcsr.gintsts, 0xFFFFFFFF);
 		}
 	}

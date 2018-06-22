@@ -18,8 +18,7 @@
 #include <cmu.h>
 
 /* SDMMC  Boot Code Debug Message */
-#define DBGLOG_ON			1
-#define SDMMC_DRVDBG_ON			1
+#define SDMMC_DRVDBG_ON			0
 
 #if (defined(DBGLOG_ON) && SDMMC_DRVDBG_ON)
 #define DRV_DBGOUT(...)		printf("DEBUG-SDMMC :  ", __VA_ARGS__)
@@ -38,7 +37,6 @@ static int sdmmc_get_baseaddr(int module)
 		PHY_BASEADDR_SDMMC0_MODULE,
 		PHY_BASEADDR_SDMMC1_MODULE,
 		PHY_BASEADDR_SDMMC2_MODULE
-
 	};
 
 	return base[module];
@@ -63,191 +61,6 @@ static void sdmmc_set_clk_freq(int module, int freq)
 	cmu_clk_divstop(index, FALSE);
 	cmu_clkgrp_enable(index, TRUE);
 }
-
-#if 0	/* todo */
-int sdmmc_readboot_sector(sdxcboot_status *pst,
-	unsigned int sector_cnt, unsigned int *buf)
-{
-	struct nx_sdmmc_reg *const base
-		= ((struct nx_sdmmc_reg *)sdmmc_get_baseaddr(pst->sd_port));
-	int count;
-
-	ASSERT(0==((unsigned int)buf & 3));
-	count = (sector_cnt * SDMMC_BLOCK_LENGTH);
-	ASSERT(0 == (count % 32));
-
-	while (0 < count) {
-		unsigned int rintsts = mmio_read_32(&base->rintsts);
-
-		if ((rintsts & SDXC_RINTSTS_RXDR) ||
-			(rintsts & SDXC_RINTSTS_DTO)) {
-
-			int fsize, timeout = SDMMC_TIMEOUT;
-			while ((mmio_read_32(&base->status)
-				& SDXC_STATUS_FIFOEMPTY) && --timeout);
-
-			if (0 == timeout)
-				break;
-
-			fsize = ((mmio_read_32(&base->status)
-				& SDXC_STATUS_FIFOCOUNT) >> 17);
-			if (count < (fsize * 4))
-				fsize = (count / 4);
-			count -= (fsize * 4);
-
-			while (fsize) {
-				*buf++ = mmio_read_32(&base->data);
-				fsize--;
-			}
-
-			mmio_write_32(&base->rintsts, SDXC_RINTSTS_RXDR);
-		}
-#if 0
-		// Check Errors
-		if (mmio_read_32(&base->rintsts) &
-					(SDXC_RINTSTS_DRTO |
-					 SDXC_RINTSTS_EBE  |
-					 SDXC_RINTSTS_SBE  |
-					 SDXC_RINTSTS_DCRC)) {
-			pbl0fn->printf("Read left = %x\r\n", count);
-
-			if (mmio_read_32(&base->rintsts) & SDXC_RINTSTS_DRTO)
-				pbl0fn->printf("DRTO\r\n");
-			if (mmio_read_32(&base->rintsts) & SDXC_RINTSTS_EBE)
-				pbl0fn->printf("EBE\r\n");
-			if (mmio_read_32(&base->rintsts) & SDXC_RINTSTS_SBE)
-				pbl0fn->printf("SBE\r\n");
-			if (mmio_read_32(&base->rintsts) & SDXC_RINTSTS_DCRC)
-				pbl0fn->printf("DCRC\r\n");
-
-			return FALSE;
-		}
-#endif
-		if (mmio_read_32(&base->rintsts) & SDXC_RINTSTS_DTO) {
-			if (count == 0) {
-				mmio_write_32(&base->rintsts, SDXC_RINTSTS_DTO);
-				DRV_DBGOUT("DTO \r\n");
-				break;
-			}
-		}
-
-		#if defined(DEBUG)
-		if (mmio_read_32(&base->rintsts) & SDXC_RINTSTS_HTO) {
-			DRV_DBGOUT("HTO \r\n");
-			mmio_read_32(&base->rintsts, SDXC_RINTSTS_HTO);
-		}
-		#endif
-
-		ASSERT(0 == (mmio_read_32(&base->rintsts) & SDXC_RINTSTS_FRUN));
-	}
-
-	mmio_write_32(&base->rintsts, SDXC_RINTSTS_DTO);
-
-	if (count)
-		return FALSE;
-	return TRUE;
-}
-
-int sdmmc_setclock(sdxcboot_status *pst, int enb, unsigned int div)
-{
-	struct nx_sdmmc_reg *const base
-		= ((struct nx_sdmmc_reg *)sdmmc_get_baseaddr(pst->sd_port));
-	volatile unsigned int timeout;
-
-	/*
-	 * 1. Confirm that no card is engaged in any transaction.
-	 * If there's a transaction, wait until it has been finished
-	 */
-
-	#if defined(DEBUG)
-	if (mmio_read_32(&base->status) & (SDXC_STATUS_DATABUSY |
-				SDXC_STATUS_FSMBUSY)) {
-		#if 1//defined(DEBUG)
-		if (mmio_read_32(&base->status) & SDXC_STATUS_DATABUSY)
-			ERROR("%s : ERROR - Data is busy\r\n", __func__);
-
-		if (mmio_read_32(&base->status) & SDXC_STATUS_FSMBUSY)
-			ERROR("%s : ERROR - Data Transfer is busy\r\n", __func__);
-		#endif
-		while(1);
-	}
-	#endif
-
-	/*
-	 * 2. Disable the output clock.
-	 * low power mode & clock disable
-	 */
-	mmio_set_32(&base->clkena, SDXC_CLKENA_LOWPWR);
-	mmio_clear_32(&base->clkena, SDXC_CLKENA_CLKENB);
-
-	if (div == SDXC_DIVIDER_400KHZ)
-		sdmmc_set_clk_freq(pst->sd_port, (400 * 1000));
-	if (div == SDXC_CLKDIV_LOW)
-		sdmmc_set_clk_freq(pst->sd_port, SDMMC_SRC_CLK_FREQ);
-	mmio_clear_32(&base->clkena, SDXC_CLKENA_LOWPWR);			// low power mode & clock disable
-
-	/*
-	 * 4. Start a command with SDXC_CMDFLAG_UPDATECLKONLY flag.
-	 */
-repeat_4 :
-	mmio_write_32(&base->cmd, (0 | SDXC_CMDFLAG_STARTCMD |
-				   SDXC_CMDFLAG_UPDATECLKONLY |
-				   SDXC_CMDFLAG_STOPABORT));
-
-	/*
-	 * 5. Wait until a update clock command is taken by the SDXC module.
-	 * If a HLE is occurred, repeat 4.
-	 */
-	timeout = 0;
-	while (mmio_read_32(&base->cmd) & SDXC_CMDFLAG_STARTCMD) {
-		if (++timeout > SDMMC_TIMEOUT) {
-			ERROR("CLK TO\r\n");
-			while(1);
-			return FALSE;
-		}
-	}
-
-	if (mmio_read_32(&base->rintsts) & SDXC_RINTSTS_HLE) {
-		while(1);
-		mmio_write_32(&base->rintsts, SDXC_RINTSTS_HLE);
-		goto repeat_4;
-	}
-
-	if (FALSE == enb)
-		return TRUE;
-
-
-	/* 6. Enable the output clock. */
-	mmio_set_32(&base->clkena, SDXC_CLKENA_CLKENB);
-
-
-	/* 7. Start a command with SDXC_CMDFLAG_UPDATECLKONLY flag. */
-repeat_7 :
-	mmio_write_32(&base->cmd, (0 | SDXC_CMDFLAG_STARTCMD |
-				   SDXC_CMDFLAG_UPDATECLKONLY |
-				   SDXC_CMDFLAG_STOPABORT));
-	/*
-	 * 8. Wait until a update clock command is taken by the SDXC module.
-	 * If a HLE is occurred, repeat 7.
-	 */
-	timeout = 0;
-	while (mmio_read_32(&base->cmd) & SDXC_CMDFLAG_STARTCMD) {
-		if (++timeout > SDMMC_TIMEOUT) {
-			ERROR("CLK2 TO\r\n");
-			while(1);
-			return FALSE;
-		}
-	}
-
-	if (mmio_read_32(&base->rintsts) & SDXC_RINTSTS_HLE) {
-		while(1);
-		mmio_write_32(&base->rintsts, SDXC_RINTSTS_HLE);
-		goto repeat_7;
-	}
-
-	return TRUE;
-}
-#endif
 
 int sdmmc_init(sdxcboot_status *pst)
 {
@@ -321,7 +134,7 @@ int emmcboot_read(struct nx_bootmanager *pbm, sdxcboot_status *pst)
 		return FALSE;
 	}
 
-	printf(" load_addr: %x load_size :%x launch_addr: %x. \r\n",
+	DBGOUT("load_addr: %x load_size :%x launch_addr: %x. \r\n",
 		pbi->load_addr, pbi->load_size, pbi->launch_addr);
 
 	/*
@@ -340,11 +153,8 @@ int emmcboot_read(struct nx_bootmanager *pbm, sdxcboot_status *pst)
 int emmcboot_normal(struct nx_bootmanager *pbm, sdxcboot_status *pst,
 		unsigned int option)
 {
-//	struct nx_sdmmc_reg *const base
-//		= ((struct nx_sdmmc_reg *)sdmmc_get_baseaddr(pst->sd_port));
 	register unsigned int sd_speed, bitwidth;
 	register int ret = FALSE;
-//	unsigned int timeout;
 
 	if (pst->bhigh_speed == TRUE)
 		sd_speed = SDXC_CLKDIV_HIGH;
@@ -357,75 +167,18 @@ int emmcboot_normal(struct nx_bootmanager *pbm, sdxcboot_status *pst,
 		bitwidth = 4;
 	DRV_DBGOUT("eMMC %s speed %d-bits Normal mode boot.\r\n",
 		sd_speed ? "High" : "Normal", bitwidth);
-#if 0
-	mmio_write_32(&base->ctype, 1);						/* Data Bus Width : 0(1-bit), 1(4-bit) */
-	mmio_write_32(&base->tiemode, (1 << 0));
-
-	if (bitwidth == 8) {
-		mmio_write_32(&base->ctype, (1 << 16));
-		mmio_write_32(&base->tiemode, (1 << 1));
-	}
-	mmio_write_32(&base->bytcnt, (8 * 1024 * 1024));			/* for normal */
-
-	if (FALSE == g_sdmmcfn->sdmmc_setclock(pst, TRUE, sd_speed)) {
-//	if (FALSE == sdmmc_setclock(pst, TRUE, sd_speed)) {
-		ERROR("clk init fail! \r\n");
-		return FALSE;
-	}
-
-	/* just send boot command. no expect response */
-	timeout = 0;
-	do {
-		/* Send Alternative Boot Command */
-		mmio_write_32(&base->rintsts, SDXC_RINTSTS_HLE);
-		mmio_write_32(&base->cmdarg, 0xFFFFFFFA);
-		mmio_write_32(&base->cmd, (GO_IDLE_STATE		|
-					   SDXC_CMDFLAG_STARTCMD	|
-					   SDXC_CMDFLAG_SENDINIT	|
-					   SDXC_CMDFLAG_BLOCK		|
-					   SDXC_CMDFLAG_RXDATA		|
-					   SDXC_CMDFLAG_ENABLE_BOOT	|
-					   SDXC_CMDFLAG_USE_HOLD_REG));
-
-		while (mmio_read_32(&base->cmd) & SDXC_CMDFLAG_STARTCMD) {
-			if (++timeout > SDMMC_TIMEOUT) {
-				WARN("TO Send command!! \r\n");
-				while(1);	/* Infinite Loop */
-				goto error;
-			}
-		}
-	} while (mmio_read_32(&base->rintsts) & SDXC_RINTSTS_HLE);
 
 	ret = emmcboot_read(pbm, pst);
 
-error:
-	if (ret == FALSE) {
-		mmio_write_32(&base->ctrl, (SDXC_CTRL_DMARST  |
-					    SDXC_CTRL_FIFORST |
-					    SDXC_CTRL_CTRLRST));
-		while (mmio_read_32(&base->ctrl) &
-					(SDXC_CTRL_DMARST  |
-					 SDXC_CTRL_FIFORST |
-					 SDXC_CTRL_CTRLRST));
-	}
-#else
-	ret = emmcboot_read(pbm, pst);
-#endif
 	return ret;
 }
 
 int emmcboot_alt(struct nx_bootmanager *pbm, sdxcboot_status *pst,
 		unsigned int option)
 {
-#if 0
-	struct nx_sdmmc_reg *const base
-		= ((struct nx_sdmmc_reg *)sdmmc_get_baseaddr(pst->sd_port));
-#endif
 	register unsigned int sd_speed, bitwidth;
 	register int ret = FALSE;
-#if 0
-	sdmmc_command cmd;
-#endif
+
 	if (pst->bhigh_speed == TRUE)
 		sd_speed = SDXC_CLKDIV_HIGH;
 	else
@@ -437,47 +190,9 @@ int emmcboot_alt(struct nx_bootmanager *pbm, sdxcboot_status *pst,
 		bitwidth = 4;
 	DRV_DBGOUT("eMMC %s speed %d-bits Alternate mode boot.\r\n",
 		sd_speed ? "High" : "Normal", bitwidth);
-#if 0
-	mmio_write_32(&base->ctype, 1);						/* Data Bus Width : 0(1-bit), 1(4-bit) */
-	mmio_write_32(&base->tiemode, (1 << 0));
 
-	if (bitwidth == 8) {
-		mmio_write_32(&base->ctype, (1 << 16));
-		mmio_write_32(&base->tiemode, (1 << 1));
-	}
-	mmio_write_32(&base->bytcnt, (8 * 1024 * 1024));			/* for Alternative */
-
-
-	if (FALSE == g_sdmmcfn->sdmmc_setclock(pst, TRUE, sd_speed)) {
-		ERROR("clk init fail! \r\n");
-		return FALSE;
-	}
-
-	/* Send Alternative Boot Command */
-	cmd.cmdidx	= GO_IDLE_STATE;
-	cmd.arg		= 0xFFFFFFFA;		/* Alternative boot mode */
-	cmd.flag	= SDXC_CMDFLAG_STARTCMD | SDXC_CMDFLAG_SENDINIT |
-			  SDXC_CMDFLAG_BLOCK | SDXC_CMDFLAG_RXDATA;
-
-	/* just send boot command. no expect response */
-	if (SDMMC_STATUS_NOERROR !=
-			g_sdmmcfn->sdmmc_sendcommandinternal(pst, &cmd)) {
-			ERROR("Send Cmd Internal Err!! \r\n");
-	} else
-		ret = emmcboot_read(pbm, pst);
-
-	if (ret == FALSE) {
-		mmio_write_32(&base->ctrl, (SDXC_CTRL_DMARST  |
-					    SDXC_CTRL_FIFORST |
-					    SDXC_CTRL_CTRLRST));
-		while (mmio_read_32(&base->ctrl) &
-					(SDXC_CTRL_DMARST  |
-					 SDXC_CTRL_FIFORST |
-					 SDXC_CTRL_CTRLRST));
-	}
-#else
 	ret = emmcboot_read(pbm, pst);
-#endif
+
 	return ret;
 }
 
@@ -616,10 +331,6 @@ int emmcboot(struct nx_bootmanager *pbm, unsigned int option)
 		pst->bhigh_speed = TRUE;
 	} else
 		pst->bhigh_speed = FALSE;
-#if 0
-	g_sdmmcfn->sdpad_setalt(pst->sd_port);
-
-	g_sdmmcfn->sdmmc_init(pst);
 
 	/* eMMC or MMC ver 4.3+ */
 	DRV_DBGOUT("eMMC boot: %d \r\n", pst->sd_port);
@@ -627,19 +338,6 @@ int emmcboot(struct nx_bootmanager *pbm, unsigned int option)
 		ret = emmcboot_alt(pbm, pst, option);
 	else
 		ret = emmcboot_normal(pbm, pst, option);
-
-	g_sdmmcfn->sdmmc_close(pst);
-	g_sdmmcfn->sdmmc_terminate(pst);
-
-	g_sdmmcfn->sdpad_setgpio(pst->sd_port);
-#else
-	/* eMMC or MMC ver 4.3+ */
-	DRV_DBGOUT("eMMC boot: %d \r\n", pst->sd_port);
-	if ((option & 1 << eMMCBOOTMODE) != 0)
-		ret = emmcboot_alt(pbm, pst, option);
-	else
-		ret = emmcboot_normal(pbm, pst, option);
-#endif
 
 	return ret;
 }

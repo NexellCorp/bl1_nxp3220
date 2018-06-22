@@ -87,8 +87,6 @@ void main(void)
 
 	/* @brief: NIC400 GPV (DDR Security0 : Slave) */
 	mmio_set_32((PHY_BASEADDR_SYS_BUS_GPV  + 0x8), 1);
-	/* @brief: NIC400 GPV (USB Security0 : Slave) */
-//	mmio_set_32((PHY_BASEADDR_FSYS_BUS_GPV + 0x8), 1);
 
 	plat_load(is_resume, pbm);
 }
