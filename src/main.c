@@ -85,6 +85,8 @@ void main(void)
 
 	vddpwron_ddr_on();
 
+	wdt_reset_enb();
+
 	/* @brief: NIC400 GPV (DDR Security0 : Slave) */
 	mmio_set_32((PHY_BASEADDR_SYS_BUS_GPV  + 0x8), 1);
 

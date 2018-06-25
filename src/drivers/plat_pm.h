@@ -29,5 +29,6 @@ void system_resume(void);
 void system_power_off(void);
 
 void vddpwron_ddr_on(void);
+void wdt_reset_enb(void);
 
 #endif	/* __PLAT_PM_H__ */
