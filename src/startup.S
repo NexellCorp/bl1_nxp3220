@@ -21,6 +21,9 @@ EXPORT(main)
 EXPORT(enable_fpu)
 EXPORT(armv7_pmu_init)
 EXPORT(monitor_mode_init)
+EXPORT(gic_initialize)
+EXPORT(invaildate_l1_icache)
+EXPORT(invaildate_dcache)
 
 /* arm exceptions vectors */
 .global vectors
@@ -37,7 +40,23 @@ vectors:
 reset_handler:
 	bl	monitor_mode_init
 
-	/* Armv7 GICC, GICD - To Do */
+	/* Set the SMP Bit for DCache */
+        mrc     p15, 0, r0, c1, c0, 1
+        tst     r0, #BIT_SMP							@ SMP bit
+        orreq   r0, r0, #BIT_SMP
+        mcreq   p15, 0, r0, c1, c0, 1               				@ Write the Aux Control Register
+
+	/* Set Vector Base Address Register (VBAR) to point to this application's vector table */
+        ldr     r0, =vectors
+        mcr     p15, 0, r0, c12, c0, 0
+
+        /* Invaild L1 Instruction Cache	*/
+	bl	invaildate_l1_icache
+	/* Invaild Data Cache */
+	bl	invaildate_dcache
+
+	/* Enable the FPU */
+	bl	enable_fpu
 
 	/* Check if Secondary Core? */
         mrc     p15, 0, r12, c0, c0, 5
@@ -50,19 +69,13 @@ reset_handler:
 
         mov     r3, #0x00000000							@ Prepare zero to clear BSS
 
-	/* Set the SMP Bit for DCache */
-        mrc     p15, 0, r0, c1, c0, 1
-        tst     r0, #BIT_SMP							@ SMP bit
-        orreq   r0, r0, #BIT_SMP
-        mcreq   p15, 0, r0, c1, c0, 1               				@ Write the Aux Control Register
-
 clbss_l:
         cmp     r1, r2								@ while not at end of BSS
         strlo   r3, [r1]							@ clear 32-bit BSS word
         addlo   r1, r1, #4
         blo     clbss_l
 
-	bl	enable_fpu
+
 	bl	armv7_pmu_init
 
 	bl	main
@@ -74,22 +87,14 @@ ENTRY(subcpu_startup)
         bic     r0, r0, #(BIT1_C|BIT1_M)					@ Clear C:2, M:0 bit to disable D Cache, MMU
         mcr     p15, 0, r0, c1, c0, 0
 
-	/* Set Vector Base Address Register (VBAR) to point to this application's vector table */
-        ldr     r0, =vectors
-        mcr     p15, 0, r0, c12, c0, 0
-
-        /* invaild date entire branch_ redictor	*/
-	/* invaild date data cache		*/
-
-	/* Only try to set SMP mode if not yet set - cannot write AuxCtrl if in normal world	*/
-        mrc     p15, 0, r0, c1, c0, 1
-        tst     r0, #BIT_SMP							@ SMP bit
-        orreq   r0, r0, #BIT_SMP
-        orreq   r0, r0, #0x7                        				@ L2C control
-        mcreq   p15, 0, r0, c1, c0, 1               				@ Write the Aux Control Register
+	mrc     p15, 0, r0, c1, c0, 0						@ Read CP15 System Control register
+	orr     r0, r0, #(BIT1_I|BIT1_Z)					@ Set I:12, Z:11 bit to enable I-Cache, Branch Prediction
+	mcr     p15, 0, r0, c1, c0, 0
 
         mrc     p15, 0, r0, c0, c0, 5
         ands    r0, r0, #0xF
+
+	bl	gic_initialize
 
 	b	subcpu_main
 ENDPROC(subcpu_startup)
