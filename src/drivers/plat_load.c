@@ -176,7 +176,7 @@ int plat_s_load(struct platform_info *ppi)
 			success = plat_next_load(pbm, option);
 			if (success < 0) {
 				WARN("Secure-OS Load Failed!! (%d) \r\n", success);
-				return -BL31_LOAD_FAILED;
+				return -BL32_LOAD_FAILED;
 			}
 			success = check_platfrom(pbm, &g_rsa_public_key[256]);
 			secure_l = pbm->bi.launch_addr;
@@ -192,7 +192,7 @@ int plat_s_load(struct platform_info *ppi)
 		success = plat_next_load(pbm, option);
 		if (success < 0) {
 			ERROR("Boot Loade 3-3 Load Failed!! (%d) \r\n", success);
-			return -BL32_LOAD_FAILED;
+			return -BL33_LOAD_FAILED;
 		}
 		success = check_platfrom(pbm, &g_rsa_public_key[256]);
 	}

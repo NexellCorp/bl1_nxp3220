@@ -24,7 +24,8 @@ struct platform_info {
 enum {
 	SSS_F_LOAD_FAILED = 1,
 	BL31_LOAD_FAILED  = 2,
-	BL32_LOAD_FAILED  = 3
+	BL32_LOAD_FAILED  = 3,
+	BL33_LOAD_FAILED  = 4
 };
 
 /* Function Define */
