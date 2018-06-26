@@ -21,6 +21,7 @@
 #include <checker.h>
 #include <tz.h>
 #include <sss.h>
+#include <cmu.h>
 #include <plat_pm.h>
 #include <plat_load.h>
 

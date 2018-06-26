@@ -242,8 +242,6 @@ void cmu_clk_divstop(int index, unsigned int enable)
 
 void cmu_clkgrp_enable(int index, unsigned int enable)
 {
-	struct nx_clk_topcmu *top_reg
-		= (struct nx_clk_topcmu*)get_clktop_base();
 	struct nx_clk_priv *sys = get_clk_priv(index);
 	struct nx_clk_priv *src = get_clk_priv(sys->p_id);
 
@@ -255,15 +253,36 @@ void cmu_clkgrp_enable(int index, unsigned int enable)
 	if (enable) {
 		mmio_set_32(&sys->reg->grp_clkenb[reg_idx], (1 << reg_bit));
 		mmio_set_32(&src->reg->grp_clkenb[src_reg_idx], (1 << src_bit));
-
-		mmio_set_32(&top_reg->grp_clk_srcoff_clr[src->grp_idx/32],
-			(1 << (src->grp_idx % 32)));
 	 } else {
 		mmio_clear_32(&sys->reg->grp_clkenb[reg_idx], (1 << reg_bit));
 		mmio_clear_32(&src->reg->grp_clkenb[src_reg_idx], (1 << src_bit));
-
-		mmio_clear_32(&top_reg->grp_clk_srcoff_set[src->grp_idx/32],
-			(1 << (src->grp_idx % 32)));
 	 }
+}
 
+void cmu_srcoff_enable(int index, unsigned int enable)
+{
+	struct nx_clk_topcmu *top_reg
+		= (struct nx_clk_topcmu*)get_clktop_base();
+	struct nx_clk_priv *sys = get_clk_priv(index);
+
+	int reg_idx = (sys->grp_idx / 32);
+	int bit = (sys->grp_idx % 32);
+
+	if (!enable)
+		mmio_write_32(&top_reg->grp_clk_srcoff_clr[reg_idx], (1 << bit));
+	else
+		mmio_clear_32(&top_reg->grp_clk_srcoff_set[reg_idx], (1 << bit));
+}
+
+void cmu_srcoff_all_enable(unsigned int enable)
+{
+	struct nx_clk_topcmu *reg
+		= (struct nx_clk_topcmu*)get_clktop_base();
+	unsigned int reg_value = 0, index;
+
+	if (!enable)
+		reg_value = 0xFFFFFFFF;
+
+	for (index = 0; index < 4; index++)
+		mmio_write_32(&reg->grp_clk_srcoff_clr[index], reg_value);
 }

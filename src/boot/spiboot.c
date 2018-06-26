@@ -50,8 +50,8 @@ static int spi_get_baseaddr(int channel)
 
 static int set_spiclk(int channel, int freq)
 {
-	cmu_clkgrp_enable(g_clk_num[channel][0], TRUE);
-	cmu_clkgrp_enable(g_clk_num[channel][1], TRUE);
+	cmu_srcoff_enable(g_clk_num[channel][0], FALSE);
+	cmu_srcoff_enable(g_clk_num[channel][1], FALSE);
 
 	/* step xx. set the spi - apb clock (default) */
 	cmu_set_rate(g_clk_num[channel][0], SPI_SRCCLK_FREQ);

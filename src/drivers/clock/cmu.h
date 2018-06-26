@@ -338,6 +338,9 @@ struct nx_clk_priv {
  int cmu_clk_enable (int index, int enable);
 void cmu_clk_divstop(int index, unsigned int enable);
 void cmu_clkgrp_enable(int index, unsigned int enable);
+void cmu_srcoff_enable(int index, unsigned int enable);
+void cmu_srcoff_all_enable(unsigned int enable);
+
 unsigned long cmu_set_rate(unsigned int index, unsigned long freq);
 unsigned long cmu_get_rate(unsigned int index);
 

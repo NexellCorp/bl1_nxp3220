@@ -57,9 +57,8 @@ static void sdmmc_set_clk_freq(int module, int freq)
 {
 	int index = sdmmc_get_clk_index(module);
 
+	cmu_srcoff_enable(index, FALSE);
 	cmu_set_rate(index, freq);
-	cmu_clk_divstop(index, FALSE);
-	cmu_clkgrp_enable(index, TRUE);
 }
 
 int sdmmc_init(sdxcboot_status *pst)
@@ -257,8 +256,7 @@ int sdmmcboot(struct nx_bootmanager* pbm, sdxcboot_status *pbt_st, unsigned int 
 	}
 
 	struct sbi_header *pbi = (struct sbi_header *)&pbm->bi;
-	printf("pbi: 0x%08X , g_sdmmcfn->sdmmc_read_sectors: 0x%08X \r\n",
-			pbi, g_sdmmcfn->sdmmc_read_sectors);
+
 	/* step 01-6. check the nexell signature */
 	if (pbi->signature != HEADER_ID) {
 		ERROR("Not bootable image (%08x).\r\n", pbi->signature);
@@ -291,7 +289,6 @@ unsigned int sdxcboot(struct nx_bootmanager *pbm, unsigned int option)
 	pst = &st;
 	pst->sd_port = ((option >> SELSDPORT) & 0x3);
 
-
 	if (pst->sd_port >= 3) {
 		pst->sd_port = 0;
 		pst->bhigh_speed = TRUE;
@@ -299,7 +296,6 @@ unsigned int sdxcboot(struct nx_bootmanager *pbm, unsigned int option)
 		pst->sd_port = (2 - pst->sd_port);
 		pst->bhigh_speed = FALSE;
 	}
-	printf("SD boot: %d\r\n", pst->sd_port);
 
 	g_sdmmcfn->sdpad_setalt(pst->sd_port);
 
@@ -312,6 +308,9 @@ unsigned int sdxcboot(struct nx_bootmanager *pbm, unsigned int option)
 	g_sdmmcfn->sdmmc_terminate(pst);
 
 	g_sdmmcfn->sdpad_setgpio(pst->sd_port);
+
+	/* @brief: source clock-off disable for next boot-loader */
+	cmu_srcoff_enable(sdmmc_get_clk_index(pst->sd_port), FALSE);
 
 	return ret;
 }

@@ -52,8 +52,8 @@ int uartboot(struct nx_bootmanager *pbm, unsigned int option)
 
 	/* step 01. set the intialize & baudrate */
 	if (pbm->bi.serial_ch != channel) {
-		cmu_clkgrp_enable(clk_num[0], TRUE);
-		cmu_clkgrp_enable(clk_num[1], TRUE);
+		cmu_srcoff_enable(clk_num[0], FALSE);
+		cmu_srcoff_enable(clk_num[1], FALSE);
 		g_uartfn->serial_init(option);
 	}
 //	serial_set_baudrate(channel, cmu_get_rate(UART_0_CORE_CLK), baud_rate);
