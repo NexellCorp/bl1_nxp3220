@@ -19,9 +19,9 @@
 
 #define NX_SUSPEND_SIGNATURE			0x57505200
 
-static struct nx_vddpwr_reg *g_vddpwr_reg =
+struct nx_vddpwr_reg *g_vddpwr_reg =
 	((struct nx_vddpwr_reg *)PHY_BASEADDR_VDDPWR);
-static struct nx_alive_reg *g_alive_reg =
+struct nx_alive_reg *g_alive_reg =
 	((struct nx_alive_reg *)PHY_BASEADDR_ALIVE);
 
 void (*enter_self_refresh)(void);
@@ -149,22 +149,4 @@ void system_resume(void)
 void system_power_off(void)
 {
 	system_vdd_pwroff();
-}
-
-/*
- * To Do: Functions that are not directly related to the system are
- * moved afterwards.
- */
-void vddpwron_ddr_on(void)
-{
-	unsigned int pad = (1 << PAD_VDDPWRON_DDR_GPIO_NUM);
-
-	/* @brief: Disable the Pull Enable  */
-	mmio_write_32(&g_alive_reg->gpio_pullupenb_rst, pad);
-}
-
-void wdt_reset_enb(void)
-{
-	/* @brief: reset the secure watch dog timer */
-	mmio_set_32(&g_vddpwr_reg->wdt_rst_enb, 0x1);
 }

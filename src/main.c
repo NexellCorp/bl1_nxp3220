@@ -16,11 +16,11 @@
 #include <sysheader.h>
 #include <pmu.h>
 #include <serial.h>
-#include <gpio.h>
 #include <memory.h>
 #include <gic.h>
 #include <tz.h>
 #include <cpupmu.h>
+#include <sys.h>
 #include <plat_pm.h>
 #include <plat_load.h>
 #include <main.h>
@@ -81,14 +81,7 @@ void main(void)
 
 	tz_initialize();
 
-	nx_gpio_bit_access();
-
-	vddpwron_ddr_on();
-
-	wdt_reset_enb();
-
-	/* @brief: NIC400 GPV (DDR Security0 : Slave) */
-	mmio_set_32((PHY_BASEADDR_SYS_BUS_GPV  + 0x8), 1);
+	system_initialize();
 
 	plat_load(is_resume, pbm);
 }
