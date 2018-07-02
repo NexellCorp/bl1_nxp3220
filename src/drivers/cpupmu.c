@@ -31,6 +31,11 @@ static inline void dmb(void)
 	__asm__ __volatile__ ("dmb");
 }
 
+static inline void cpu_wfi(void)
+{
+	__asm__ __volatile__ ("wfi");
+}
+
 static int mc_pmu_is_busy(void)
 {
 	unsigned int reg_val;
@@ -87,13 +92,14 @@ static void mc_pmu_pc_set_to_safe(void)
 	unsigned int inst;
 	unsigned short safe_inst;
 
-	inst = mmio_read_32(&g_cpupmu_reg->program[MC_PMU_PROGRAM_REGION - 1]);
+	inst = mmio_read_32(&g_cpupmu_reg->program[(MC_PMU_PROGRAM_REGION / 2) - 1]);
 	safe_inst = MC_PMU_SET_INSTRUCTION(PMU_CMD_END, PMU_OP_0, 0x1);
 
 	inst = ((inst & (0xffff)) | (unsigned int)(safe_inst << 16));
 
 	while(mc_pmu_is_busy());
 
+	mmio_write_32(&g_cpupmu_reg->program[(MC_PMU_PROGRAM_REGION / 2) - 1], inst);
 	mmio_write_32(&g_cpupmu_reg->pc_move, (MC_PMU_PROGRAM_REGION * 2 ) - 1);
 }
 
@@ -370,6 +376,8 @@ void cpu_on_sequence(unsigned int cpu_id)
 
 	while(mc_pmu_is_busy());
 
+	dmb();
+
 	mc_pmu_pc_set_to_safe();
 }
 
@@ -389,7 +397,9 @@ void cpu_off_sequence(unsigned int cpu_id)
 
 	dmb();
 
-	while(mc_pmu_is_busy())
+	cpu_wfi();
+
+	while(mc_pmu_is_busy());
 
 	dmb();
 

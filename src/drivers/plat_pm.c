@@ -15,6 +15,7 @@
 #include <cpupmu.h>
 #include <alive.h>
 #include <memory.h>
+#include <sysreg.h>
 #include <checker.h>
 
 #define NX_SUSPEND_SIGNATURE			0x57505200
@@ -23,6 +24,8 @@ struct nx_vddpwr_reg *g_vddpwr_reg =
 	((struct nx_vddpwr_reg *)PHY_BASEADDR_VDDPWR);
 struct nx_alive_reg *g_alive_reg =
 	((struct nx_alive_reg *)PHY_BASEADDR_ALIVE);
+struct nx_sysreg_cpu_reg *g_syscpu_reg =
+	((struct nx_sysreg_cpu_reg *)PHY_BASEADDR_SYSREG_CPU);
 
 void (*enter_self_refresh)(void);
 
@@ -55,9 +58,17 @@ int check_suspend_state(void)
 
 int system_cpu_check(unsigned int cpu_id)
 {
-	cpu_id = cpu_id;
+	unsigned int status;
 
-	return 0;
+	status = ((mmio_read_32(&g_syscpu_reg->ctrl[4]) >> cpu_id) & 0x1);
+
+	/* @brief: return value (0: on, 1:off, 2: pending) */
+	if (status)
+		status = 0;
+	else
+		status = 1;
+
+	return status;
 }
 
 int system_cpu_on(unsigned int cpu_id)
@@ -65,8 +76,8 @@ int system_cpu_on(unsigned int cpu_id)
 	if (cpu_id != 1)
 		return -1;
 
-	/* High Vector : To Do */
-	mmio_set_32((0x22030000 + 0x14), ( 0x1 << (4 + 1)));
+	/* @brief: set the high vector */
+	mmio_set_32(&g_syscpu_reg->ctrl[0], (0x1 << (4 + 1)));
 
 	dmb();
 	cpu_on_sequence(cpu_id);

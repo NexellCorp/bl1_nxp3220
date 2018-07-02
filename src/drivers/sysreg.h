@@ -124,4 +124,14 @@ struct nx_sysreg_usb_reg {
 	volatile unsigned int cfg_bus_secure1;					/* 0x110	*/
 };
 
+struct nx_sysreg_cpu_reg {
+	volatile unsigned int spare[5];						/* 0x00 ~ 0x14 */
+	volatile unsigned int ctrl[5];						/* 0x14 ~ 0x30 */
+	volatile unsigned int intctrl[7];					/* 0x30 ~ 0x4C */
+	volatile unsigned int busctrl[2];					/* 0x50 ~ 0x54 */
+	volatile unsigned int hpm_reg[2];					/* 0x54 ~ 0x5C */
+	volatile unsigned int cntvalue;						/* 0x5C */
+	volatile unsigned int tsvalue;						/* 0x60 */
+};
+
 #endif /* #ifndef __SYSREG_H__ */

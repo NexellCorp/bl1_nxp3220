@@ -20,7 +20,7 @@
 /* external vrriables */
 extern unsigned int g_subcpu_ep;
 
-static inline void subcpu_wfi(void)
+static void subcpu_wfi(void)
 {
 	__asm__ __volatile__ ("wfi");
 }

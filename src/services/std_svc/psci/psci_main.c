@@ -15,8 +15,9 @@
 #include <plat_pm.h>
 #include <psci_main.h>
 #include <psci.h>
-
 #include <psci_private.h>
+
+#include <gic.h>
 
 /* External Variable */
 extern volatile int g_smc_id;
@@ -79,7 +80,11 @@ int psci_cpu_on(unsigned int target_cpu,
 
 int psci_cpu_off(void)
 {
+	struct nx_gicc_reg *cbase
+		= (struct nx_gicc_reg *)gicc_get_baseaddr();
 	int rc = 0;
+
+	mmio_clear_32(&cbase->ctlr, (3 << 0));
 
 	smp_enable(0);
 
