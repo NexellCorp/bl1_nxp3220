@@ -87,8 +87,10 @@ void gic_initialize(void)
 		mmio_write_32(&dbase->priorityr[index], 0x0);;
 
 	for (index = 0; index < (0x40/4); index++) {
+#if 0
 		mmio_write_32(&dbase->cenabler[index], 0xFFFFFFFF);		/* 0x220C1180 ~ 0x220C11FF */
 		mmio_write_32(&dbase->cpendr[index], 0xFFFFFFFF);		/* 0x220C1280 ~ 0x220C12FF */
+#endif
 		/*
 		 * GIC set the path that is connected to the
 		 * internal IP interrupts, generated. (0: Secure, 1: Non-Secure)

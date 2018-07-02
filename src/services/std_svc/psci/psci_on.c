@@ -26,14 +26,7 @@ unsigned int g_subcpu_ep;
 int psci_cpu_on_start(unsigned int target_cpu, unsigned int entrypoint)
 {
 	unsigned int cpu_id = ((target_cpu >> 0) & 0xFF);
-	int secure_status = get_secure_status();
 
-	/*
-	 * Check if it is non-secure.
-	 * Do not use separate variables.
-	 */
-	if (secure_status)
-		entrypoint |= 1;
 	g_subcpu_ep = entrypoint;
 
 	system_cpu_on(cpu_id);

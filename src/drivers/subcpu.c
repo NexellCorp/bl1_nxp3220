@@ -29,13 +29,7 @@ void subcpu_main(unsigned int id)
 {
 	if (g_subcpu_ep) {
 		mmio_write_32(ALIVE_CPUON_FLAG, (1 << id));
-		/* @brief: Check from non-secure call mark */
-		if (g_subcpu_ep & 0x1) {
-			g_subcpu_ep &= ~1;
-			non_secure_launch(0, g_subcpu_ep);
-		} else {
-			secure_launch(0, g_subcpu_ep, 0, 0);
-		}
+		non_secure_launch(0, g_subcpu_ep);
 	} else {
 		/* @brief: If not valid, enters WFI state. */
 		subcpu_wfi();

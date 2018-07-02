@@ -30,7 +30,20 @@ void (*enter_self_refresh)(void);
 extern volatile int g_subcpu_num;
 extern volatile int g_cpu_kill_num;
 
-static inline void dmb(void)
+void smp_enable(int enable)
+{
+	int value;
+
+	value = armv7_get_auxctrl();
+	value &= ~(1 << 6);
+
+	if (enable)
+		value |= (1 << 6);
+
+	armv7_set_auxctrl(value);
+}
+
+void dmb(void)
 {
 	__asm__ __volatile__ ("dmb");
 }
@@ -42,7 +55,9 @@ int check_suspend_state(void)
 
 int system_cpu_check(unsigned int cpu_id)
 {
-	return cpu_id;
+	cpu_id = cpu_id;
+
+	return 0;
 }
 
 int system_cpu_on(unsigned int cpu_id)

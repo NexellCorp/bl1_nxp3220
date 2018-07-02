@@ -15,6 +15,9 @@
 #define __PLAT_PM_H__
 
 /* function define */
+void smp_enable(int enable);
+void dmb(void);
+
 int check_suspend_state(void);
 
 int system_cpu_check(unsigned int cpu_id);

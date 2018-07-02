@@ -73,12 +73,15 @@ int psci_cpu_on(unsigned int target_cpu,
 	/* nxp3220(cortex-a7) Actual secondary cpu on */
 	rc = psci_cpu_on_start(target_cpu, entrypoint);
 
+	/* @brief: return value (0: on, 1: off, 2:pending) */
 	return rc;
 }
 
 int psci_cpu_off(void)
 {
 	int rc = 0;
+
+	smp_enable(0);
 
 	rc = psci_do_cpu_off();
 
