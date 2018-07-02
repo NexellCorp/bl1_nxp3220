@@ -25,6 +25,8 @@ void watchdog_reset(void)
 
 void system_initialize(void)
 {
+	struct nx_sysreg_sys_reg *sys_reg
+		= ((struct nx_sysreg_sys_reg *)PHY_BASEADDR_SYSREG_SYS);
 	/*
 	 * @brief: Change access permission to all bits
 	 * of GPIO A~F to non-secure.
@@ -35,6 +37,10 @@ void system_initialize(void)
 	vddpwron_ddr_on(VDDPWRON_DDR_GPIO_NUM);
 
 	watchdog_reset();
+
+	/* @brief: The can register, which must be set with secure permission.*/
+	mmio_set_32(&sys_reg->can[0].can_cok, 0x1);
+	mmio_set_32(&sys_reg->can[1].can_cok, 0x1);
 
 	/* @brief: NIC400 GPV (DDR Security0 : Slave) */
 	mmio_set_32((PHY_BASEADDR_SYS_BUS_GPV  + 0x8), 1);
