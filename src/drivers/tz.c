@@ -253,13 +253,18 @@ static void set_tzpc(void)
 //	mmio_write_32(&base[0x8000], HSIF_REGSECURE0);
 }
 
+#define TZPC_R0_SIZE_UNIT		(4 * 1024)
 
 static void set_tzma(void)
 {
 	struct nx_sysreg_sys_reg *sys
 		= ((struct nx_sysreg_sys_reg *)PHY_BASEADDR_SYSREG_SYS);
+	unsigned int r0_size;
 
-	mmio_write_32(&sys->axisram, BL1_SRAM_SIZE);
+	r0_size = (BL1_SRAM_SIZE/TZPC_R0_SIZE_UNIT);
+	r0_size |= (1 << 10);
+
+	mmio_write_32(&sys->axisram, r0_size);
 }
 
 static void set_tzasc(void)
