@@ -37,7 +37,6 @@ static int check_load_addr(unsigned int load_addr)
 static int check_platfrom(struct nx_bootmanager *pbm,
 				unsigned char *rsa_public_key)
 {
-
 	unsigned int option = get_boption();
 	int verify_enb = ((option >> VERIFY) & 0x3);
 	int encrypted = (option & (1 << DECRYPT));
@@ -46,7 +45,7 @@ static int check_platfrom(struct nx_bootmanager *pbm,
 	/* @brief: verification the hash data */
 	if ((ret = authenticate_bimage(pbm,
 			rsa_public_key, verify_enb)) < 0) {
-		ERROR("Verification Failed!! \n");
+		ERROR("Verification Failed!! \r\n");
 		return -1;
 	}
 
@@ -66,6 +65,8 @@ static int check_platfrom(struct nx_bootmanager *pbm,
 static void plat_s_launch(unsigned int is_resume,
 		unsigned int secure_l, unsigned int n_secure_l, int is_secure)
 {
+	while (serial_busy());
+
 	if (is_secure) {
 		SYSMSG("Launch to 0x%08X\r\n", (unsigned int)secure_l);
 		secure_launch(is_resume, secure_l, n_secure_l, 0);
@@ -136,14 +137,17 @@ void plat_load(unsigned int is_resume, struct nx_bootmanager *pbm)
 //	if (success >= 0)
 //		success = check_platfrom(pbm, &g_rsa_public_key[256]);
 
-//	if (success >= 0) {
+	if (success >= 0) {
 		/* @brief: Relocate the header of base address */
 		memcpy((void*)RE_HEADER_BASEADDR, (void*)&pbm->bi,
 			sizeof(struct sbi_header));
 		g_nsih = (struct sbi_header *)RE_HEADER_BASEADDR;
 
 		plat_s_launch(is_resume, 0, pbm->bi.launch_addr, 0);
-//	}
+	}
+
+	printf("Platform Load Failed!! (%X) \r\n", success);
+	while(1);
 }
 
 int plat_s_load(struct platform_info *ppi)

@@ -33,6 +33,7 @@ struct nx_brtdmadesc {
 };
 
 /* Function Define */
+ void sssc_reset(unsigned int enable);
  int sss_load(struct nx_bootmanager *pbm, unsigned int option);
 
 #endif /* #ifndef __SSS_H__ */

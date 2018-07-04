@@ -120,7 +120,6 @@ bin:
 gen:
 	./tools/rsa_sign_new -n reference-nsih/nsih_general.txt -i out/bl1-${CHIPNAME}.bin -b tools/bootkey -u tools/userkey -k bl1 -l 0xFFFF0000 -s 0xFFFF0000 -t
 
-
 mkobjdir:
 ifeq ($(OS),Windows_NT)
 	@if not exist $(DIR_OBJOUTPUT)			\

@@ -19,6 +19,7 @@
 
 #define SSS_CM0_BASEADDR			(PHY_BASEADDR_SSS_MODULE_SSS + 0x8000)
 
+#define FCGLOBAL				(PHY_BASEADDR_SSS_MODULE_SSS + 0x18)
 #define CM0_LP_CON				(PHY_BASEADDR_SSS_MODULE_SSS + 0x1C)
 
 #define	MB_STATUS				(SSS_MAILBOX_BASEADDR + 0x00)
@@ -32,6 +33,16 @@
 #define	MB_DATA02				(SSS_MAILBOX_BASEADDR + 0x108)
 #define	MB_DATA03				(SSS_MAILBOX_BASEADDR + 0x10C)
 #define	MB_DATA04				(SSS_MAILBOX_BASEADDR + 0x110)
+
+void sssc_reset(unsigned int enable)
+{
+	unsigned int reg_value = 0;
+
+	if (enable)
+		reg_value = 1;
+
+	mmio_set_32(FCGLOBAL, reg_value);
+}
 
 static void run_wait(unsigned int ctrl)
 {

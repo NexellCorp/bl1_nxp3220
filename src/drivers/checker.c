@@ -21,6 +21,11 @@ void aes_cbc_decrypt_bimage(struct nx_bootmanager *pbm, unsigned int iv[])
 	g_mbedtls->aes_cbc_decrypt_bimage((unsigned int*)pbm->bi.load_addr,
 			(unsigned int*)pbm->bi.load_addr, (unsigned int *)iv,
 			pbm->bi.load_size);
+
+	NOTICE("Image decrypt complete!! \r\n");
+
+	/* @brief: software reset the sss controller */
+	sssc_reset(TRUE);
 }
 
 /* @brief: Generate hashes using common data */
@@ -41,7 +46,7 @@ void sss_generate_hash(unsigned int base,
 
 /* @brief: Generate hashes using header and boot-images. */
 void bimage_generate_hash(struct nx_bootmanager *pbm,
-			unsigned char *rsa_public_key, char* phash)
+			unsigned char *rsa_public_key, unsigned char* phash)
 {
 	struct nx_hrdmadesc desc[3];
 	int hsize = (int)sizeof(struct sbi_header);
@@ -74,7 +79,6 @@ void bimage_generate_hash(struct nx_bootmanager *pbm,
 
 	g_crypto->get_hash(desc, 3, (unsigned int *)phash,
 					(hsize + keysize + bsize));
-
 //	NOTICE("Hash Generated!! \r\n");
 
 	return;
@@ -109,11 +113,11 @@ int authenticate_image(unsigned char *pbootkey,
 			&st_rsa_pubkey, &st_digest, &st_sign);
 
 	if (ret != SSSR_SUCCESS) {
-		ERROR("\nImage has been modified. %08X\n\r\n", ret);
+		ERROR("\r\nImage has been modified. %08X\r\n", ret);
 		return -1;
 	}
 
-	NOTICE("\nImage signature is valid.\n\r\n");
+	NOTICE("\r\n Image Signature is Valid. \r\n");
 
 	return 0;
 }
@@ -136,6 +140,9 @@ int authenticate_bimage(struct nx_bootmanager *pbm,
 			(unsigned char*)rsa_public_key,
 			(unsigned char*)hash,
 			(unsigned char*)pbm->rsa_encrypted_sha256_hash);
+
+		/* @brief: software reset the sss controller */
+		sssc_reset(TRUE);
 	}
 
 	return ret;

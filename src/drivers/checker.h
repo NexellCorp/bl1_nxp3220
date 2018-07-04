@@ -19,7 +19,7 @@ void aes_cbc_decrypt_bimage(struct nx_bootmanager *pbm, unsigned int iv[]);
 void sss_generate_hash(unsigned int base, unsigned int size, unsigned char *phash);
 
  void bimage_generate_hash(struct nx_bootmanager *pbm,
-			 unsigned char *rsa_public_key, char* phash);
+			 unsigned char *rsa_public_key, unsigned char* phash);
  int authenticate_image(unsigned char *pbootkey,
 	 unsigned char *phash, unsigned char *psign);
 
