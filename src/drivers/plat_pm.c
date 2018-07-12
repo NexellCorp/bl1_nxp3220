@@ -132,7 +132,11 @@ static void system_vdd_pwroff(void)
 
 	/* step 03. 1 Cycle(Unit: 21.333us) (24Mhz Osillator Clock(40ns)*512) */
 	mmio_write_32(&g_alive_reg->vddoffcnt_value, 0x00000001);
-	/* step 04. VDDPOWERON Off, start counting down. */
+
+	/* step 04. VDD Control ([1]: VDDPWERON_DDR, [0]:VDDPOWRON) */
+	mmio_clear_32(&g_alive_reg->vddctrl_read, 0x00000001);
+
+	/* step 05. VDDPOWERON Off, start counting down. */
 	mmio_write_32(&g_vddpwr_reg->vddoff_start, (1 << 0));
 
 	while(1);
