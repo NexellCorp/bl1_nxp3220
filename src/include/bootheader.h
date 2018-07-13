@@ -221,7 +221,8 @@ struct asymmetric_key {
 struct nx_bootmanager {
 	struct sbi_header bi;							/* 0x000 ~ 0x1FC */
 	uint8_t rsa_encrypted_sha256_hash[2048/8];				/* 0x200 ~ 0x2FF */
-	struct asymmetric_key rsa_public;
+	uint8_t rsa_public_key[2048/8];						/* 0x300 ~ 0x3FF */
+//	struct asymmetric_key rsa_public;
 };
 
 #endif // #ifndef __BOOTHEADDR_H__

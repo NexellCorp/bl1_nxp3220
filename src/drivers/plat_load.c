@@ -27,6 +27,7 @@
 
 /* Global Vriables */
 extern unsigned char g_rsa_public_key[512];
+extern unsigned int emmc_next_bl;
 extern void (*enter_self_refresh)(void);
 
 static int check_load_addr(unsigned int load_addr)
@@ -166,7 +167,7 @@ int plat_s_load(struct platform_info *ppi)
 	if (is_secure_os) {
 		if (ppi->is_sss_f) {
 			NOTICE("Load the SSS Firmware.. \r\n");
-			g_nsih->dbi.device_addr = SSS_DEVICE_ADDR;
+			g_nsih->dbi.device_addr = check_load_addr(ppi->sf_dev_addr);
 			success = sss_load(pbm, option);
 			if (success < 0) {
 				WARN("SSS Firmware Load Failed!! (%d) \r\n", success);
