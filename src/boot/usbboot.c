@@ -57,58 +57,76 @@ void usb_int_bulkout(usbboot_status *pusbbt_st, struct nx_bootmanager *pbm,
 		if ((fifo_cnt_byte & 3) == 0) {
 			pusbbt_st->rx_header_size += fifo_cnt_byte;
 		} else {
-			printf("Stall: Size Align: %d \r\n", fifo_cnt_byte);
+			DRV_DBGOUT("Stall: Size Align: %d \r\n", fifo_cnt_byte);
 			mmio_set_32(&g_usbotg_reg->dcsr.depor[BULK_OUT_EP].doepctl,
 				DEPCTL_STALL);
 			return;
 		}
 
-		if ((sizeof(struct sbi_header)
-			+ sizeof(pbm->rsa_encrypted_sha256_hash))
-				<= pusbbt_st->rx_header_size) {
+		if (sizeof(struct sbi_header) <= pusbbt_st->rx_header_size) {
 			struct sbi_header *ptbi = (struct sbi_header *)&pbm->bi;
 
 			if (ptbi->signature == HEADER_ID) {
 				pusbbt_st->b_header_received = TRUE;
-			#if 0
-				printf("Load Addr: %X, Size: %X \r\n",
-					pbm->bi.load_addr, pbm->bi.load_size);
-			#else
-				pusbbt_st->b_hash_received = TRUE;
+
 				pusbbt_st->rx_addr = (unsigned char*)pbm->bi.load_addr;
 				pusbbt_st->rx_addr_save =
 					(unsigned char*)pbm->bi.load_addr;
 				pusbbt_st->rx_size = pbm->bi.load_size;
 				pusbbt_st->rx_size_save = pusbbt_st->rx_size;
 
-				printf("Load Addr: %x, Size: %x \r\n",
+				DRV_DBGOUT("Load Addr: %x, Size: %x \r\n",
 					(unsigned char *)pusbbt_st->rx_addr,
 						pusbbt_st->rx_size);
-			#endif
+
+				pusbbt_st->b_image_received = FALSE;
+				pusbbt_st->rx_image_size = 0;
+
 			} else {
 				pusbbt_st->rx_header_size = 0;
+				pusbbt_st->rx_image_size  = 0;
 				mmio_set_32(&g_usbotg_reg->dcsr.depor[BULK_OUT_EP].doepctl,
 					DEPCTL_STALL);
 			}
 		}
 
-	} else {
-		ASSERT((pusbbt_st->rx_size) > 0);
-		ASSERT(0 == ((unsigned int)pusbbt_st->rx_addr & 3));
+	} else if ((TRUE != pusbbt_st->b_image_received)
+			&& (TRUE == pusbbt_st->b_header_received)) {
+
 		g_usbfn->usb_read_out_fifo(BULK_OUT_EP,
 				(unsigned char *)pusbbt_st->rx_addr,
 				fifo_cnt_byte);
 
-		INFO("Bin Packet Size = %x ==> %x, %x\r\n",
+		pusbbt_st->rx_addr += fifo_cnt_byte;
+		pusbbt_st->rx_size -= fifo_cnt_byte;
+
+		if (pusbbt_st->rx_size <= 0) {
+			pusbbt_st->b_image_received = TRUE;
+			pusbbt_st->rx_addr =
+				(unsigned char*)pbm->rsa_encrypted_sha256_hash;
+			pusbbt_st->rx_addr_save =
+				(unsigned char*)pbm->rsa_encrypted_sha256_hash;
+			pusbbt_st->rx_size = sizeof(pbm->rsa_encrypted_sha256_hash);
+			pusbbt_st->rx_size_save = pusbbt_st->rx_size;
+		}
+	} else {
+		ASSERT((pusbbt_st->rx_size) > 0);
+		ASSERT(0 == ((unsigned int)pusbbt_st->rx_addr & 3));
+
+		g_usbfn->usb_read_out_fifo(BULK_OUT_EP,
+				(unsigned char *)pusbbt_st->rx_addr,
+				fifo_cnt_byte);
+		DRV_DBGOUT("Bin Packet Size = %x ==> %x, %x\r\n",
 			pusbbt_st->rx_size, pusbbt_st->rx_addr, pusbbt_st->rx_size);
 
 		pusbbt_st->rx_addr += fifo_cnt_byte;
 		pusbbt_st->rx_size -= fifo_cnt_byte;
 
 		if (pusbbt_st->rx_size <= 0) {
-			printf("Download Done!\r\n");
+			DRV_DBGOUT("Download Done!\r\n");
 			pusbbt_st->b_downloading     = FALSE;
 			pusbbt_st->b_header_received = FALSE;
+			pusbbt_st->b_image_received  = FALSE;
 			pusbbt_st->rx_header_size    = FALSE;
 		}
 	}

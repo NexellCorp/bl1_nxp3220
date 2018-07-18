@@ -16,9 +16,9 @@
 
 #define SRAM_BASEADDR			0xFFFF0000
 #define SRAM_SIZE			(64 * 1024)
-#define BL1_SRAM_SIZE			(32 * 1024)
+#define BL1_SRAM_SIZE			(40 * 1024)
 #define	BL1_SVC_STACK_SIZE		(0x400)
-#define BL1_MON_STACK_SIZE		(0x400)
+#define BL1_MON_STACK_SIZE		(0x600)
 
 /* SDRAM in Boot Loader 0 File Format */
 #define HEADER_BASEADDR			(SRAM_BASEADDR + SRAM_SIZE - (1 * 1024))

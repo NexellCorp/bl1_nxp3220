@@ -75,6 +75,53 @@
 #define	SET_CLR_CARD_DETECT	((42) | ((SDMMC_RSPIDX_R1	) << 8) | (APP_CMD << 16))
 #define SEND_SCR		((51) | ((SDMMC_RSPIDX_R1	) << 8) | (APP_CMD << 16))
 
+/* EXT_CSD Fields */
+#define EXT_CSD_PARTITIONING_SUPPORT		160				/* RO */
+#define EXT_CSD_ERASE_GROUP_DEF			175				/* R/W */
+#define EXT_CSD_PART_CONF			179				/* R/W */
+#define EXT_CSD_BUS_WIDTH			183				/* R/W */
+#define EXT_CSD_HS_TIMING			185				/* R/W */
+#define EXT_CSD_REV				192				/* RO */
+#define EXT_CSD_CARD_TYPE			196				/* RO */
+#define EXT_CSD_SEC_CNT				212				/* RO, 4 bytes */
+#define EXT_CSD_HC_ERASE_GRP_SIZE		224				/* RO */
+#define EXT_CSD_BOOT_MULT			226				/* RO */
+
+#define EXT_CSD_BOOT_CONFIG 			179				/* R/W */
+#define EXT_CSD_BOOT_BUS_WIDTH  		177				/* R/W */
+
+/* EXT_CSD field definitions */
+#define EXT_CSD_CMD_SET_NORMAL			(1 << 0)
+#define EXT_CSD_CMD_SET_SECURE			(1 << 1)
+#define EXT_CSD_CMD_SET_CPSECURE		(1 << 2)
+
+#define EXT_CSD_CARD_TYPE_26			(1  <<  0)			/* Card can run at 26MHz */
+#define EXT_CSD_CARD_TYPE_52			(1  <<  1)			/* Card can run at 52MHz */
+
+#define EXT_CSD_BUS_WIDTH_1			0				/* Card is in 1 bit mode */
+#define EXT_CSD_BUS_WIDTH_4			1				/* Card is in 4 bit mode */
+#define EXT_CSD_BUS_WIDTH_8			2				/* Card is in 8 bit mode */
+
+#define EXT_CSD_NO_BOOT				(0 << 6)
+//#define EXT_CSD_BOOT_ACK			(1 << 6)
+
+#define EXT_CSD_BOOT_PARTITION_NOT_ENABLE	(0x0 << 3)
+#define EXT_CSD_BOOT_PARTITION_1_ENABLE		(0x1 << 3)
+#define EXT_CSD_BOOT_PARTITION_2_ENABLE		(0x2 << 3)
+
+#define EXT_CSD_BOOT_PARTITION_NO_ACCESS	(0x0)
+#define EXT_CSD_BOOT_PARTITION_1_ACCESS		(0x1)
+#define EXT_CSD_BOOT_PARTITION_2_ACCESS		(0x2)
+
+#define EXT_CSD_BOOT_ACK(x)			(x << 6)
+#define EXT_CSD_BOOT_PART_NUM(x)		(x << 3)
+#define EXT_CSD_PARTITION_ACCESS(x)		(x << 0)
+
+#define MMC_SWITCH_MODE_CMD_SET			0x00				/* Change the command set */
+#define MMC_SWITCH_MODE_SET_BITS		0x01 				/* Set bits in EXT_CSD byte addressed by index which area1 in value field */
+#define MMC_SWITCH_MODE_CLEAR_BITS		0x02				/* Clear bits in EXT_CSD byte addressed by index, which are 1 in value field */
+#define MMC_SWITCH_MODE_WRITE_BYTE		0x03				/* Set target byte to value */
+
 
 typedef struct tag_sdmmc_cmd
 {

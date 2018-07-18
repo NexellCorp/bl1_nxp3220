@@ -105,7 +105,7 @@ int spiboot(struct nx_bootmanager *pbm, unsigned int option)
 	int channel = (option >> SELSPIPORT) & 0x3;
 	int addr_step = (2 + ((option & 1 << SERIALFLASHADDR) ? 0 : 1));
 	int flash_addr = g_nsih->dbi.device_addr;
-	int read_size;
+	int read_size, extra_size = 256;
 
 	int ret = 0;
 
@@ -121,11 +121,12 @@ int spiboot(struct nx_bootmanager *pbm, unsigned int option)
 	DRV_DBGOUT("%d Step, 0x%08X Device Address!! \r\n", addr_step, flash_addr);
 
 	/* step 02-1. read the boot-header */
-	read_size = sizeof(struct sbi_header);
+	read_size = (sizeof(struct sbi_header) + extra_size);
 	DRV_DBGOUT("Read Header!! (NSIH) \r\n");
 	g_spifn->read_flash(channel, ((unsigned char *)&pbm->bi),
 		flash_addr, read_size, addr_step);
 	flash_addr += read_size;
+
 	/* step 02-2. check the nexell signature */
 	if (pbm->bi.signature != HEADER_ID) {
 		ERROR("Header Signature Failed! (%08x)\r\n", pbm->bi.signature);
@@ -133,18 +134,18 @@ int spiboot(struct nx_bootmanager *pbm, unsigned int option)
 		goto error;
 	}
 
-	/* step 03. read the hash data */
+	/* step 03. read the boot-image file */
+	DRV_DBGOUT("Read the boot-image !! \r\n");
+	read_size = pbm->bi.load_size;
+	g_spifn->read_flash(channel, (unsigned char*)pbm->bi.load_addr,
+		flash_addr, read_size, addr_step);
+	flash_addr += read_size;
+
+	/* step 04. read the signature data */
 	DRV_DBGOUT("Read the Hash!! \r\n");
 	read_size = sizeof(pbm->rsa_encrypted_sha256_hash);
 	g_spifn->read_flash(channel,
 		((unsigned char*)&pbm->rsa_encrypted_sha256_hash[0]),
-		flash_addr, read_size, addr_step);
-	flash_addr += read_size;
-
-	/* step 04. read the boot-image file */
-	DRV_DBGOUT("Read the boot-image !! \r\n");
-	read_size = pbm->bi.load_size;
-	g_spifn->read_flash(channel, (unsigned char*)pbm->bi.load_addr,
 		flash_addr, read_size, addr_step);
 	flash_addr += read_size;
 

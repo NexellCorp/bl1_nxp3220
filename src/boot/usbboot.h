@@ -358,9 +358,9 @@ typedef struct __attribute__((aligned(sizeof(unsigned char*)))) tag_usbboot_stat
 
 	volatile int		b_downloading;
 	int			b_header_received;
-//	int			b_rsakey_received;
 
-	unsigned int		rx_size;
+//	unsigned int		rx_size;
+	int			rx_size;
 	unsigned int 		rx_size_save;
 	unsigned int		rx_header_size;
 
@@ -386,8 +386,8 @@ typedef struct __attribute__((aligned(sizeof(unsigned char*)))) tag_usbboot_stat
 	unsigned char __attribute__ ((aligned(4)))
 		fs_devdesc[DEVICE_DESCRIPTOR_SIZE];
 
-	int			rx_hash_size;
-	int			b_hash_received;
+	unsigned int		rx_image_size;
+	int			b_image_received;
 
 } usbboot_status;
 

@@ -38,6 +38,7 @@ int uartboot(struct nx_bootmanager *pbm, unsigned int option)
 	connection_info_t info;
 
 	unsigned int channel = ((option >> UARTPORT) & 0x7);
+	unsigned int extra_size = 256;
 
 	int size = 0;;
 	int err, res;
@@ -67,7 +68,7 @@ int uartboot(struct nx_bootmanager *pbm, unsigned int option)
 
 	/* step 03-1. read the header  */
 	if ((res = g_uartfn->xyzModem_stream_read(&xyz, ((char*)&pbm->bi),
-			sizeof(struct sbi_header), &err)) > 0)
+			(sizeof(struct sbi_header) + extra_size), &err)) > 0)
 		size += res;
 	/* step 03-2. check the nexell signature */
 	if (pbm->bi.signature != HEADER_ID) {
@@ -76,15 +77,15 @@ int uartboot(struct nx_bootmanager *pbm, unsigned int option)
 		goto error;
 	}
 
-	/* step 04. read the hash data */
-	if ((res = g_uartfn->xyzModem_stream_read(&xyz,
-		((char*)&pbm->rsa_encrypted_sha256_hash[0]),
-			sizeof(pbm->rsa_encrypted_sha256_hash), &err)) > 0)
+	/* step 04. read the boot-image0 */
+	if ((res = g_uartfn->xyzModem_stream_read(&xyz, (char*)pbm->bi.load_addr,
+			(pbm->bi.load_size), &err)) > 0)
 		size += res;
 
-	/* step 05. read the boot-image0 */
-	if ((res = g_uartfn->xyzModem_stream_read(&xyz, (char*)pbm->bi.load_addr,
-			(pbm->bi.load_size + 1), &err)) > 0)
+	/* step 05. read the signature data */
+	if ((res = g_uartfn->xyzModem_stream_read(&xyz,
+		((char*)&pbm->rsa_encrypted_sha256_hash[0]),
+			sizeof(pbm->rsa_encrypted_sha256_hash) + 1, &err)) > 0)
 		size += res;
 
 	/* step 06. close the ymodem protocol */
