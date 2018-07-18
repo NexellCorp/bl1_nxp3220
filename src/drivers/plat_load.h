@@ -15,7 +15,7 @@
 #define __PLAT_LOAD_H__
 
 struct platform_info {
-	unsigned int is_sss_f;
+	unsigned int is_loadmark;
 	unsigned int s_dev_addr;
 	unsigned int n_dev_addr;
 	unsigned int sf_dev_addr;

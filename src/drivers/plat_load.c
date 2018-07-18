@@ -155,7 +155,8 @@ int plat_s_load(struct platform_info *ppi)
 {
 	struct nx_bootmanager bm, *pbm;
 	unsigned int is_resume = check_suspend_state();
-	unsigned int is_secure_os = (ppi->s_dev_addr ? 1 : 0);
+	unsigned int is_secure_os = ((ppi->is_loadmark >> 0) & 0xF);
+	unsigned int is_sss_f = ((ppi->is_loadmark >> 8) & 0xF);
 	unsigned int option = get_boption();
 	unsigned int secure_l = 0;
 	int success = 0;
@@ -165,7 +166,7 @@ int plat_s_load(struct platform_info *ppi)
 	enter_self_refresh = (void (*)(void))ppi->esr_func;
 
 	if (is_secure_os) {
-		if (ppi->is_sss_f) {
+		if (is_sss_f) {
 			NOTICE("Load the SSS Firmware.. \r\n");
 			g_nsih->dbi.device_addr = check_load_addr(ppi->sf_dev_addr);
 			success = sss_load(pbm, option);
@@ -173,7 +174,7 @@ int plat_s_load(struct platform_info *ppi)
 				WARN("SSS Firmware Load Failed!! (%d) \r\n", success);
 				return -SSS_F_LOAD_FAILED;
 			}
-//			success = check_platfrom(pbm, &g_rsa_public_key[256]);
+			success = check_platfrom(pbm, &g_rsa_public_key[256]);
 		}
 
 		if (is_resume == 0) {
@@ -205,7 +206,7 @@ int plat_s_load(struct platform_info *ppi)
 	/* @brief: Copies the header for reference in BL2 */
 	memcpy((void*)USERKEY_BASEADDR, (void*)&pbm->bi, sizeof(struct sbi_header));
 
-	if (is_secure_os && (secure_l > 0))
+	if ((is_secure_os && (secure_l > 0)) || (pbm->bi.launch_addr > 0))
 		plat_s_launch(is_resume, secure_l, pbm->bi.launch_addr, is_secure_os);
 
 	return success;
