@@ -130,7 +130,7 @@ int authenticate_bimage(struct nx_bootmanager *pbm,
 
 	if (verify_enb) {
 		/* @brief: generate the hash data (input: header + original image) */
-		bimage_generate_hash(pbm, rsa_public_key, (char*)hash);
+		bimage_generate_hash(pbm, rsa_public_key, (unsigned char*)hash);
 
 		/*
 		 * @brief: perform authentication procedures

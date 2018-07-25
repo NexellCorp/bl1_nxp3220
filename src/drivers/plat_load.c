@@ -66,7 +66,7 @@ static int check_platfrom(struct nx_bootmanager *pbm,
 static void plat_s_launch(unsigned int is_resume,
 		unsigned int secure_l, unsigned int n_secure_l, int is_secure)
 {
-	while (serial_busy());
+	while (!serial_tx_empty());
 
 	if (is_secure) {
 		SYSMSG("Launch to 0x%08X\r\n", (unsigned int)secure_l);
