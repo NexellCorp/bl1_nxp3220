@@ -127,6 +127,7 @@ static void system_vdd_pwroff(void)
 {
 	/* step 01. disable the CPU WFI */
 	mmio_write_32(&g_vddpwr_reg->disable_cpu_wfi, (1 << 0));
+
 	/* step 02. all alive pend pending clear until power down. */
 	mmio_write_32(&g_alive_reg->gpio_detect_pend, 0xFF);
 
@@ -134,9 +135,12 @@ static void system_vdd_pwroff(void)
 	mmio_write_32(&g_alive_reg->vddoffcnt_value, 0x00000001);
 
 	/* step 04. VDD Control ([1]: VDDPWERON_DDR, [0]:VDDPOWRON) */
-	mmio_clear_32(&g_alive_reg->vddctrl_read, 0x00000001);
+	mmio_clear_32(&g_alive_reg->vddctrl_read, 0x1);
 
-	/* step 05. VDDPOWERON Off, start counting down. */
+	/* step 05. VDD Off -> Wakeup Start Delay  */
+	mmio_clear_32(&g_vddpwr_reg->vddoff_delay_for_wakeup_mask, 0x0000000A);
+
+	/* step 06. VDDPOWERON Off, start counting down. */
 	mmio_write_32(&g_vddpwr_reg->vddoff_start, (1 << 0));
 
 	while(1);
