@@ -64,8 +64,8 @@
 #define DECRYPT			25	// virtual flag bit.
 #define EXNOBOOTMSG_SAVE	26	// saved external boot mode pin status
 #define EXSPEEDUP_SAVE		27	// saved external boot mode pin status
-#define NOBOOTMSG		28	// 0: boot message, 1: no boot message
-#define SPEEDUP			29	// system speed up
+#define SPEEDUP			28	// system speed up
+#define NOBOOTMSG		29	// 0: boot message, 1: no boot message
 #define VERIFY			30	// 0: 0, 1: 1, 2:2, 3: no verify
 
 #define AESENB			1

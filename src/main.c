@@ -47,6 +47,18 @@ void param_set_fnptr(void)
 	smc_set_fnptr((void*)bl1_smc_handler);
 }
 
+void bl0_bootmsg_on(unsigned int enable)
+{
+	int value = get_boption();
+
+	if (enable)
+		value &= ~(1 << NOBOOTMSG);
+	else
+		value |= (1 << NOBOOTMSG);
+
+	set_boption(value);
+}
+
 void main(void)
 {
 	struct nx_bootmanager bm, *pbm;
@@ -54,6 +66,9 @@ void main(void)
 	int serial_ch = g_nsih->serial_ch;
 	int s_early = false;
 	int is_resume = 0;
+
+	/* @brief: Disable the No Boot Message option on BL0. */
+	bl0_bootmsg_on(TRUE);
 
 	is_resume = check_suspend_state();
 
