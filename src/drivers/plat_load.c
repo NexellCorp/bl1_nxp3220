@@ -22,6 +22,7 @@
 #include <tz.h>
 #include <sss.h>
 #include <cmu.h>
+#include <alive.h>
 #include <plat_pm.h>
 #include <plat_load.h>
 
@@ -29,6 +30,7 @@
 extern unsigned char g_rsa_public_key[512];
 extern unsigned int emmc_next_bl;
 extern void (*enter_self_refresh)(void);
+extern struct nx_vddpwr_reg *g_vddpwr_reg;
 
 static int check_load_addr(unsigned int load_addr)
 {
@@ -41,7 +43,7 @@ static int check_platfrom(struct nx_bootmanager *pbm,
 	unsigned int option = get_boption();
 	int verify_enb = ((option >> VERIFY) & 0x3);
 	int encrypted = (option & (1 << DECRYPT));
-	int ret;
+	int ret = 0;
 
 	/* @brief: verification the hash data */
 	if ((ret = authenticate_bimage(pbm,
@@ -187,6 +189,8 @@ int plat_s_load(struct platform_info *ppi)
 			}
 			success = check_platfrom(pbm, &g_rsa_public_key[256]);
 			secure_l = pbm->bi.launch_addr;
+			/* @brief: save the secure launch address for subcpu. */
+			mmio_write_32(&g_vddpwr_reg->new_scratch[8], secure_l);
 			/* @brief: set the tzasc regionX for secure-os */
 			tzasc_set_regionx(TZC_REGION_1,
 				pbm->bi.load_addr, pbm->bi.load_size, TRUE);
@@ -205,6 +209,9 @@ int plat_s_load(struct platform_info *ppi)
 	}
 	/* @brief: Copies the header for reference in BL2 */
 	memcpy((void*)USERKEY_BASEADDR, (void*)&pbm->bi, sizeof(struct sbi_header));
+
+	/* @brief: save the loadmark for later use. */
+	mmio_write_32(&g_vddpwr_reg->new_scratch[7], ppi->is_loadmark);
 
 	if ((is_secure_os && (secure_l > 0)) || (pbm->bi.launch_addr > 0))
 		plat_s_launch(is_resume, secure_l, pbm->bi.launch_addr, is_secure_os);

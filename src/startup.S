@@ -60,8 +60,6 @@ reset_handler:
 
         /* Invaild L1 Instruction Cache	*/
 	bl	invaildate_l1_icache
-	/* Invaild Data Cache */
-	bl	invaildate_dcache
 
 	/* Set the BSS-Area to zero. */
         ldr     r1, =__bss_start__

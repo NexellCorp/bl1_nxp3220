@@ -13,12 +13,17 @@
  */
 #include <sysheader.h>
 #include <subcpu.h>
-
-/* @brief: New Scratch 9 in Alive Block */
-#define ALIVE_CPUON_FLAG			(0x2008C800 + (4 * 9))
+#include <alive.h>
+#include <plat_pm.h>
 
 /* external vrriables */
 extern unsigned int g_subcpu_ep;
+extern struct nx_vddpwr_reg *g_vddpwr_reg;
+
+/* external functions */
+unsigned int bl1_smc_handler(unsigned int smc_fid,
+	unsigned int r1, unsigned int r2, unsigned int r3);
+void smc_set_fnptr(unsigned int (*smc_handler));
 
 static void subcpu_wfi(void)
 {
@@ -27,9 +32,25 @@ static void subcpu_wfi(void)
 
 void subcpu_main(unsigned int id)
 {
+	unsigned int is_secure_os = 0, secure_l;
+	unsigned int is_resume = check_suspend_state();
+
+	/* @brief: Parameters to which the BL32 will be delivered. */
+	smc_set_fnptr((void*)bl1_smc_handler);
+
+	/* @brief: New Scratch 10 in Alive Block */
+	mmio_write_32(&g_vddpwr_reg->new_scratch[10], (1 << id));
+
+	/* @brief: load the loadmark for secure_os */
+	is_secure_os = ((mmio_read_32(&g_vddpwr_reg->new_scratch[7]) >> 0) & 0xF);
+
 	if (g_subcpu_ep) {
-		mmio_write_32(ALIVE_CPUON_FLAG, (1 << id));
-		non_secure_launch(0, g_subcpu_ep);
+		if (is_secure_os) {
+			secure_l = mmio_read_32(&g_vddpwr_reg->new_scratch[8]);
+			secure_launch(is_resume, secure_l, g_subcpu_ep, 0);
+		} else {
+			non_secure_launch(is_resume, g_subcpu_ep);
+		}
 	} else {
 		/* @brief: If not valid, enters WFI state. */
 		subcpu_wfi();
