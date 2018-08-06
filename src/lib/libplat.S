@@ -44,9 +44,15 @@ ENTRY(smc_set_fnptr)
 	bx	lr
 ENDPROC(smc_set_fnptr)
 
+ENTRY(get_cpuid)
+	mrc	p15, 0, r0, c0, c0, 5
+	ands	r0, r0, #0xF
+	bx	lr
+ENDPROC(get_cpuid)
+
 ENTRY(secure_launch)
 	mov	r11, r1
-	msr	CPSR_c,  #(MODE_SVC|I_BIT)
+	msr	CPSR_c,  #(MODE_MON|I_BIT)
 
 	mov	lr, r2
 	mov	r1, r3

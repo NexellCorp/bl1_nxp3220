@@ -64,6 +64,7 @@ void main(void)
 	struct nx_bootmanager bm, *pbm;
 	int device = ((get_boption() >> BOOTMODE) & 0x7);
 	int serial_ch = g_nsih->serial_ch;
+	int cpu_id = get_cpuid();
 	int s_early = false;
 	int is_resume = 0;
 
@@ -92,7 +93,7 @@ void main(void)
 	if (device != USBBOOT)
 		usb_blk_pwrup();
 
-	gic_initialize();
+	gic_initialize(cpu_id);
 
 	tz_initialize();
 

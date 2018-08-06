@@ -71,7 +71,7 @@ void gicd_set_sgir(void *base, int val)
 /*******************************************************************************
  * Setup the ARM GIC CPU and Distributor interfaces.
 ******************************************************************************/
-void gic_initialize(void)
+void gic_initialize(unsigned int cpu_id)
 {
 	struct nx_gicd_reg *dbase = (struct nx_gicd_reg *)gicd_get_baseaddr();
 	struct nx_gicc_reg *cbase = (struct nx_gicc_reg *)gicc_get_baseaddr();
@@ -82,6 +82,11 @@ void gic_initialize(void)
 
 	/* CPU Interface (Secure/Non-Secure) Enable */
 	mmio_write_32(&cbase->ctlr, (3 << 0));
+
+	mmio_write_32(&dbase->group[0], 0xFFFFFFFF);
+
+	if (cpu_id != 0)
+		return;
 
 	for (index = 0; index < (0x200/4); index++)
 		mmio_write_32(&dbase->priorityr[index], 0x0);;
@@ -99,6 +104,7 @@ void gic_initialize(void)
 	}
 
 	mmio_write_32(&dbase->ctlr, 0x0);
+
 	for (index = 0; index < (0x200/4); index++)
 		mmio_write_32(&dbase->priorityr[index], 0x80808080);
 

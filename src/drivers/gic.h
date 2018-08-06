@@ -102,6 +102,6 @@ void gicd_set_enable(void *base, int val);
 void gicd_set_group(void *base, int val);
 void gicd_set_sgir(void *base, int val);
 
-void gic_initialize(void);
+void gic_initialize(unsigned int cpu_num);
 
 #endif  /* __GIC_V1_H__ */

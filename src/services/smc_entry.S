@@ -91,8 +91,8 @@ ENTRY(monitor_mode_init)
 	mov	r8, lr
 	mov	lr, #0								@ svc lr
 	mov	sp, #0								@ svc sp
-	/* Switch to monitor mode  */
 
+	/* Switch to monitor mode  */
 	msr	CPSR_c,  #(MODE_MON|I_BIT|F_BIT)
 
         mrc     p15, 0, r0, c1, c0, 0						@ Read CP15 System Control register

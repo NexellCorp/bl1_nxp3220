@@ -41,4 +41,6 @@ void set_fnptr(int);
  int get_boption(void);
 void set_boption(int);
 
+ int get_cpuid(void);
+
 #endif	// __LIBARMV7_H__
