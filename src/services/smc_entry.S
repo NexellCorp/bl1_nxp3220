@@ -103,7 +103,6 @@ ENTRY(monitor_mode_init)
 	/* Stack size set to monitor mode  */
 	ldr     sp, =SRAM_BASEADDR
 	add     sp, sp, #BL1_SRAM_SIZE
-	sub	sp, sp, #BL1_MON_STACK_SIZE
 
 	mrc     p15, 0, r12, c0, c0, 5						@ Get our cpu id
 	ands    r12, r12, #0xF							@ Save CPU id
