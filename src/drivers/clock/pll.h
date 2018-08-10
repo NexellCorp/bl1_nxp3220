@@ -57,11 +57,16 @@ enum nx_pll {
 
 #define	PLL_DIRTYFLAG		(1 << 1)
 #define PLL_RUN_CHANGE		(1 << 0)					/* PLL Run change start. (Write Only) */
+#define LINK_RESETB		(1 << 0)
+#define LINK_BYPASS		(1 << 1)
+#define UPDATE_CONFIG_DIRECTLY	(1 << 15)
 
 /* Function Define */
 int clock_is_stable(int num);
 int get_pll_lock(int num);
 int get_pll_freq(int num);
+int get_pre_pll_freq(unsigned int num, unsigned int pm,
+			unsigned int sk);
 int nx_change_pll(int index, int pm, int sk, int sscg);
 int pll_initialize(void);
 

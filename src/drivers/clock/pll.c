@@ -42,7 +42,10 @@ void pll_set_oscmux(unsigned int num, unsigned int muxsel)
 	struct nx_pll_reg *base
 		= (struct nx_pll_reg*)get_pll_baseaddr(num);
 
-	mmio_set_32(&base->pll_ctrl, (muxsel << 3));				/* OSC_MUX (0: OSCCLK, 1:PLL_FOUT) */
+	if (muxsel != PLL_MUX_PLL_FOUT)
+		mmio_clear_32(&base->pll_ctrl, (1 << 3));
+	else
+		mmio_set_32(&base->pll_ctrl, (1 << 3));				/* OSC_MUX (0: OSCCLK, 1:PLL_FOUT) */
 }
 
 /* Check the PLL-Lock State (PLL(Phase Locked Loop)or Oscillator) */
@@ -74,7 +77,7 @@ static int check_pll_lock(int num)
 /* Check the PLL-Clock Stable */
 int clock_is_stable(int num)
 {
-	int timeout = 0x200000;
+	int timeout = 0xFFFFFFF;
 
 	while (check_pll_lock(num) == false) {					/* true is (pll locked), false is (pll unlocked) */
 		if (timeout-- <= 0)
@@ -101,9 +104,7 @@ int get_pll_freq(int num)
 	unsigned int reg_value, reg_value1, p, m, s, k;
 	unsigned int temp = 0;
 
-	if (num >= 3)			/* [DEBUG] */
-		return 0;
-
+	reg_value  = mmio_read_32(&base->pll_cfg1);				// SoC Issue Check
 	reg_value  = mmio_read_32(&base->pll_cfg1);
 	reg_value1 = mmio_read_32(&base->pll_cfg2);
 
@@ -111,6 +112,28 @@ int get_pll_freq(int num)
 	m = (reg_value  >> PLL_M_BITPOS) & 0xFFFF;
 	s = (reg_value1 >> PLL_S_BITPOS) & 0xFFFF;
 	k = (reg_value1 >> PLL_K_BITPOS) & 0xFFFF;
+
+	if (((num == 1) || (num == 4)) && k)
+		temp = ((((k * 1000) / 65536) * g_osc_khz) / p) >> s;
+
+	temp = ((((m * g_osc_khz) / p) >> s) * 1000) + temp;
+
+	/* @breif: PLL1/PLLDDRx is based on 2 divisions. */
+	if ((num == 1) || (num == 3) || (num == 4))
+		temp /= 2;
+
+	return temp;
+}
+
+int get_pre_pll_freq(unsigned int num, unsigned int pm,
+			unsigned int sk)
+{
+	unsigned int p = ((pm >>  0) & 0xFFFF);
+	unsigned int m = ((pm >> 16) & 0xFFFF);
+	unsigned int s = ((sk >>  0) & 0xFFFF);
+	unsigned int k = ((sk >> 16) & 0xFFFF);
+
+	unsigned int temp = 0;
 
 	if (((num == 1) || (num == 4)) && k)
 		temp = ((((k * 1000) / 65536) * g_osc_khz) / p) >> s;
@@ -136,7 +159,8 @@ static void get_pmsk_parser(int *pm, int *sk, int *sscg)
 
 		/* step xx. check the k-value (set the sscg) */
 		if ((sk[i] >> PLL_K_BITPOS) & PLL_VAL_BITMASK)
-			sscg[i] = g_nsih->clk[i].sscg;
+			sscg[i] = (g_nsih->clk[i].sscg |
+					(1 << PLL_SSCG_ENB_BITPOS));
 		else
 			sscg[i] = 0;
 	}
@@ -160,31 +184,29 @@ int nx_change_pll(int index, int pm, int sk, int sscg)
 {
 	struct nx_pll_reg *base =
 		(struct nx_pll_reg *)get_pll_baseaddr(index);
-	int reg_value;
 
 	if (clock_is_stable(index))
 		return false;
 
-	pll_set_oscmux(index, PLL_MUX_PLL_FOUT);
-
-	if (mmio_read_32(&base->pll_dbg0) != 5) {
-		mmio_write_32(&base->pll_cnt0, 5);
-		mmio_write_32(&base->pll_cnt1, 5);
-		mmio_write_32(&base->pll_cnt2, 5);
-
-		/* Depending on the model pll different latency. */
-		if ((index == PLLCPU) || (index == PLLDDR1))
-			reg_value = (3000 * ((pm & 0xFFFF) + 1));
-		else
-			reg_value = ( 200 * ((pm & 0xFFFF) + 1));
-		mmio_write_32(&base->pll_cnt3, reg_value);
-	}
+	pll_set_oscmux(index, PLL_MUX_OSCCLK);
 
 	mmio_write_32(&base->pll_cfg1, pm);
 	mmio_write_32(&base->pll_cfg2, sk);
 	mmio_write_32(&base->pll_ctrl1, sscg);
-	mmio_set_32(&base->pll_ctrl, PLL_DIRTYFLAG);				/* Used as a flag when changing the PLL. */
-	mmio_set_32(&base->pll_ctrl, PLL_RUN_CHANGE);				/* Change the PLL */
+
+	mmio_clear_32(&base->pll_cfg0, (LINK_BYPASS | LINK_RESETB));
+	mmio_set_32(&base->pll_ctrl, PLL_DIRTYFLAG);
+	mmio_set_32(&base->pll_ctrl, UPDATE_CONFIG_DIRECTLY);
+
+	udelay(10);								/* 2us * 5 */
+
+	mmio_set_32(&base->pll_cfg0, LINK_RESETB);
+	mmio_set_32(&base->pll_ctrl, PLL_DIRTYFLAG);
+	mmio_set_32(&base->pll_ctrl, UPDATE_CONFIG_DIRECTLY);
+
+	udelay(300);								/* 150us * 2 */
+
+	pll_set_oscmux(index, PLL_MUX_PLL_FOUT);
 
 	return true;
 }
@@ -196,13 +218,14 @@ int pll_initialize(void)
 
 	get_pmsk_parser(pm, sk, sscg);
 
-	for (i = 0; i < NUMBER_OF_MAX_PLL - 2; i++) {
+	for (i = 2; i < NUMBER_OF_MAX_PLL; i++) {
 		ret = nx_change_pll(i, pm[i], sk[i], sscg[i]);
 		if (ret != true) {
 //			PANIC("pll clock is not stable!!\r\n");
 			return false;
 		}
+		clock_is_stable(i);
 	}
 
-	return true;
+	return ret;
 }
