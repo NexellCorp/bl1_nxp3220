@@ -15,9 +15,11 @@
 #include <subcpu.h>
 #include <alive.h>
 #include <plat_pm.h>
+#include <plat_load.h>
 
 /* external vrriables */
 extern unsigned int g_subcpu_ep;
+extern struct platform_manager *g_ppi;
 extern struct nx_vddpwr_reg *g_vddpwr_reg;
 
 /* external functions */
@@ -32,22 +34,21 @@ static void subcpu_wfi(void)
 
 void subcpu_main(unsigned int id)
 {
-	unsigned int is_secure_os = 0, secure_l;
+	unsigned int is_secure_os = 0;
 	unsigned int is_resume = check_suspend_state();
 
 	/* @brief: Parameters to which the BL32 will be delivered. */
 	smc_set_fnptr((void*)bl1_smc_handler);
 
-	/* @brief: New Scratch 10 in Alive Block */
-	mmio_write_32(&g_vddpwr_reg->new_scratch[10], (1 << id));
+	/* @brief: save the subcpu wakeup mark (for debugt) */
+	g_ppi->wakeup_mark = (1 << id);
 
 	/* @brief: load the loadmark for secure_os */
-	is_secure_os = ((mmio_read_32(&g_vddpwr_reg->new_scratch[7]) >> 0) & 0xF);
+	is_secure_os = ((g_ppi->pi.is_loadmark >> 0) & 0xF);
 
 	if (g_subcpu_ep) {
 		if (is_secure_os) {
-			secure_l = mmio_read_32(&g_vddpwr_reg->new_scratch[8]);
-			secure_launch(is_resume, secure_l, g_subcpu_ep, 0);
+			secure_launch(is_resume, g_ppi->s_launch_addr, g_subcpu_ep, 0);
 		} else {
 			non_secure_launch(is_resume, g_subcpu_ep);
 		}

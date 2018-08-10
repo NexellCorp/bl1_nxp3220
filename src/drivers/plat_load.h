@@ -15,11 +15,21 @@
 #define __PLAT_LOAD_H__
 
 struct platform_info {
+	/* @brief: boot loader level x information */
 	unsigned int is_loadmark;
 	unsigned int s_dev_addr;
 	unsigned int n_dev_addr;
 	unsigned int sf_dev_addr;
-	void (*esr_func)(void);
+	/* @brief: Memory Function */
+	void (*ensr_func)(void);
+	void (*exsr_func)(void);
+};
+
+struct platform_manager {
+	struct platform_info pi;
+	/* @brief: save the subcpu wake mark (for debug) */
+	unsigned int wakeup_mark;
+	unsigned int s_launch_addr;
 };
 
 enum {

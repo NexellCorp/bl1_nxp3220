@@ -27,6 +27,9 @@
 #include <plat_load.h>
 
 /* Global Vriables */
+struct platform_manager g_pi, *g_ppi;
+
+/* Extern Variables */
 extern unsigned char g_rsa_public_key[512];
 extern unsigned int emmc_next_bl;
 extern void (*enter_self_refresh)(void);
@@ -164,8 +167,11 @@ int plat_s_load(struct platform_info *ppi)
 	int success = 0;
 
 	pbm = ((struct nx_bootmanager *)&bm);
+	g_ppi = ((struct platform_manager *)&g_pi);
+	memcpy((void*)g_ppi, (void*)ppi, sizeof(struct platform_info));
+
 	/* @brief: enter_self_refresh function address */
-	enter_self_refresh = (void (*)(void))ppi->esr_func;
+	enter_self_refresh = (void (*)(void))ppi->ensr_func;
 
 	if (is_secure_os) {
 		if (is_sss_f) {
@@ -188,9 +194,8 @@ int plat_s_load(struct platform_info *ppi)
 				return -BL32_LOAD_FAILED;
 			}
 			success = check_platfrom(pbm, &g_rsa_public_key[256]);
-			secure_l = pbm->bi.launch_addr;
-			/* @brief: save the secure launch address for subcpu. */
-			mmio_write_32(&g_vddpwr_reg->new_scratch[8], secure_l);
+			secure_l = g_ppi->s_launch_addr  = pbm->bi.launch_addr;
+
 			/* @brief: set the tzasc regionX for secure-os */
 			tzasc_set_regionx(TZC_REGION_1,
 				pbm->bi.load_addr, pbm->bi.load_size, TRUE);
@@ -209,9 +214,6 @@ int plat_s_load(struct platform_info *ppi)
 	}
 	/* @brief: Copies the header for reference in BL2 */
 	memcpy((void*)USERKEY_BASEADDR, (void*)&pbm->bi, sizeof(struct sbi_header));
-
-	/* @brief: save the loadmark for later use. */
-	mmio_write_32(&g_vddpwr_reg->new_scratch[7], ppi->is_loadmark);
 
 	if ((is_secure_os && (secure_l > 0)) || (pbm->bi.launch_addr > 0))
 		plat_s_launch(is_resume, secure_l, pbm->bi.launch_addr, is_secure_os);
