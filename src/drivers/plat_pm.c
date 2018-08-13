@@ -28,6 +28,8 @@ struct nx_sysreg_cpu_reg *g_syscpu_reg =
 	((struct nx_sysreg_cpu_reg *)PHY_BASEADDR_SYSREG_CPU);
 
 void (*enter_self_refresh)(void);
+void (*exit_self_refresh)(void);
+void (*pmic_poweroff)(void);
 
 /* External Variable */
 extern volatile int g_subcpu_num;
@@ -182,5 +184,9 @@ void system_resume(void)
 
 void system_power_off(void)
 {
-	system_vdd_pwroff();
+	/* @breif: Power Management IC - Power OFF */
+	pmic_poweroff();
+
+	/* Waiting for Power OFF */
+	while(1);
 }

@@ -32,7 +32,11 @@ struct platform_manager g_pi, *g_ppi;
 /* Extern Variables */
 extern unsigned char g_rsa_public_key[512];
 extern unsigned int emmc_next_bl;
+/* Extern Functions */
 extern void (*enter_self_refresh)(void);
+extern void (*exit_self_refresh)(void);
+extern void (*pmic_poweroff)(void);
+
 extern struct nx_vddpwr_reg *g_vddpwr_reg;
 
 static int check_load_addr(unsigned int load_addr)
@@ -172,6 +176,8 @@ int plat_s_load(struct platform_info *ppi)
 
 	/* @brief: enter_self_refresh function address */
 	enter_self_refresh = (void (*)(void))ppi->ensr_func;
+	exit_self_refresh = (void (*)(void))ppi->exsr_func;
+	pmic_poweroff = (void (*)(void))ppi->pmic_poweroff;
 
 	if (is_secure_os) {
 		if (is_sss_f) {
