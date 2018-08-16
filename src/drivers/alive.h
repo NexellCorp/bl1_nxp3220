@@ -38,8 +38,8 @@ struct nx_alive_reg {
 	volatile unsigned int gpio_async_detect_mode_set1;			// 0x14 : Alive GPIO ASync Detect Mode Set Register1
 	volatile unsigned int gpio_high_async_detect_mode_read;			// 0x18 : Alive GPIO High ASync Detect Mode Read Register
 
-	volatile unsigned int gpio_detect_mode_rst0;				// 0x1C : Alive GPIO Detect Mode Reset Register0
-	volatile unsigned int gpio_detect_mode_set0;				// 0x20 : Alive GPIO Detect Mode Reset Register0
+	volatile unsigned int gpio_detectmode_rst0;				// 0x1C : Alive GPIO Detect Mode Reset Register0
+	volatile unsigned int gpio_detectmode_set0;				// 0x20 : Alive GPIO Detect Mode Reset Register0
 	volatile unsigned int gpio_falldetect_mode_read;			// 0x24 : Alive GPIO Falling Edge Detect Mode Read Register
 
 	volatile unsigned int gpio_detectmode_rst1;				// 0x28 : Alive GPIO Detect Mode Reset Register1
