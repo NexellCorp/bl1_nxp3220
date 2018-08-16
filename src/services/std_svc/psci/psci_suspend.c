@@ -61,7 +61,4 @@ void psci_cpu_suspend_finish(unsigned int cpu_idx,
 	/* Remove warning for futrue externsibility */
 	cpu_idx = cpu_idx;
 	state_info = state_info;
-
-	/* the function for system wakeup */
-	system_resume();
 }

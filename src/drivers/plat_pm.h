@@ -25,10 +25,12 @@ int system_cpu_on(unsigned int cpu_id);
 int system_cpu_off(unsigned int cpu_id);
 
 void system_core_reset(void);
+int check_suspend_hash(void);
 void suspend_mark(unsigned int base,
 	unsigned int size, unsigned int entry_point);
 void system_suspend(unsigned int entry_point);
-void system_resume(void);
+ int check_system_resume(unsigned int *is_resume, unsigned int is_secure_os,
+	 unsigned int *s_launch, unsigned int *ns_launch);
 void system_power_off(void);
 
 #endif	/* __PLAT_PM_H__ */

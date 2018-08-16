@@ -179,6 +179,17 @@ int plat_s_load(struct platform_info *ppi)
 	exit_self_refresh = (void (*)(void))ppi->exsr_func;
 	pmic_poweroff = (void (*)(void))ppi->pmic_poweroff;
 
+	/*
+	 * @brief: After confirming the resume status, perform the necessary
+	 * resume step at boot time.
+	 */
+	if (is_resume) {
+		success = check_system_resume(&is_resume, is_secure_os,
+				&secure_l, &pbm->bi.launch_addr);
+		if (success == 0)
+			goto plat_launch;
+	}
+
 	if (is_secure_os) {
 		if (is_sss_f) {
 			NOTICE("Load the SSS Firmware.. \r\n");
@@ -221,6 +232,7 @@ int plat_s_load(struct platform_info *ppi)
 	/* @brief: Copies the header for reference in BL2 */
 	memcpy((void*)USERKEY_BASEADDR, (void*)&pbm->bi, sizeof(struct sbi_header));
 
+plat_launch:
 	if ((is_secure_os && (secure_l > 0)) || (pbm->bi.launch_addr > 0))
 		plat_s_launch(is_resume, secure_l, pbm->bi.launch_addr, is_secure_os);
 

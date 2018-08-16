@@ -27,7 +27,14 @@ void vddpwron_ddr_on(unsigned int pad)
 	unsigned int value = (1 << pad);
 
 	/* @brief: Disable the Pull Enable */
-	mmio_write_32(&g_alive_reg->gpio_pullupenb_rst, value);
+	mmio_set_32(&g_alive_reg->gpio_pullupenb_rst, value);
+	mmio_set_32(&g_alive_reg->gpio_pad_outenb_rst, value);
+	mmio_set_32(&g_alive_reg->gpio_inputenb_rst, value);
+
+	/* step xx. set the alive gpio */
+	mmio_set_32(&g_alive_reg->gpio_padout_rst, value);			// outpad - low
+	mmio_set_32(&g_alive_reg->gpio_padout_set, value);			// outpad - high
+	mmio_set_32(&g_alive_reg->gpio_pad_outenb_set, value);			// output enable
 }
 
 void watchdog_reset(void)
