@@ -37,6 +37,26 @@ void vddpwron_ddr_on(unsigned int pad)
 	mmio_set_32(&g_alive_reg->gpio_pad_outenb_set, value);			// output enable
 }
 
+#define HRESETO_GPIO_NUM		10
+
+void hreseto_set_repwron(unsigned int pad_num)
+{
+	unsigned int bit_pos = (pad_num * 2);
+
+	/* @brief: change the alternate 1 function (alive gpio 10) */
+	mmio_clear_32(&g_vddpwr_reg->alive_gpio_altfn_sel_low,
+		(0x3 << bit_pos));
+	mmio_set_32(&g_vddpwr_reg->alive_gpio_altfn_sel_low,
+		(0x1 << bit_pos));
+
+	/* @brief: Time to keep 'HRESETO' low. */
+	mmio_write_32(&g_vddpwr_reg->vddoff_delay_for_repower_on, 0xFFFF);
+
+	mmio_set_32(&g_vddpwr_reg->repoweron_enb_reg, (1 << 0));
+
+	mmio_clear_32(&g_vddpwr_reg->alive_hard_reset_enb, (1 << 0));
+}
+
 void watchdog_reset(void)
 {
 	/* @brief: reset the secure watch dog timer */
@@ -53,8 +73,11 @@ void system_initialize(void)
 	 */
 	nx_gpio_bit_access();
 
-	/* @brief: disable pull-up for VDDPOWRON pin  */
+	/* @brief: Disable pull-up for VDDPOWRON pin  */
 	vddpwron_ddr_on(VDDPWRON_DDR_GPIO_NUM);
+
+	/* @brief: Enable the HRESETO function  */
+	hreseto_set_repwron(HRESETO_GPIO_NUM);
 
 	watchdog_reset();
 
