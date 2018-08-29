@@ -23,6 +23,7 @@
 #include <sss.h>
 #include <cmu.h>
 #include <alive.h>
+#include <efuse.h>
 #include <plat_pm.h>
 #include <plat_load.h>
 
@@ -48,8 +49,9 @@ static int check_platfrom(struct nx_bootmanager *pbm,
 				unsigned char *rsa_public_key)
 {
 	unsigned int option = get_boption();
+	unsigned int s_option = efuse_get_cfg();
 	int verify_enb = ((option >> VERIFY) & 0x3);
-	int encrypted = (option & (1 << DECRYPT));
+	int encrypted = ((s_option >> 1) & 0x1);
 	int ret = 0;
 
 	/* @brief: verification the hash data */

@@ -80,8 +80,9 @@ struct nx_ecid_info {
 };
 
 /* Function Define */
- int efuse_get_bootcfg(void);
+ int efuse_get_cfg(void);
  int efuse_get_ecid(int index);
+ int get_efuse_cfg(void);
 
 void ecid_parser(struct nx_ecid_info *pei);
 void ecid_information(struct nx_ecid_info *pei);
