@@ -36,12 +36,10 @@
 
 void sssc_reset(unsigned int enable)
 {
-	unsigned int reg_value = 0;
-
 	if (enable)
-		reg_value = 1;
-
-	mmio_set_32(FCGLOBAL, reg_value);
+		mmio_set_32(FCGLOBAL, (1 << 0));
+	else
+		mmio_clear_32(FCGLOBAL, (1 << 0));
 }
 
 static void run_wait(unsigned int ctrl)

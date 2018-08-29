@@ -33,6 +33,10 @@ void sss_generate_hash(unsigned int base,
 		unsigned int size, unsigned char *phash)
 {
 	struct nx_hrdmadesc desc;
+
+	/* @brief: software reset the sss controller (temporary) */
+	sssc_reset(TRUE);
+
 	desc.hrdmac =  ((0 << 14) |						/* burst length */
 			(0 <<  9) |						/* ARUSER	*/
 			(0 <<  2) |						/* ARPROT	*/
@@ -42,6 +46,9 @@ void sss_generate_hash(unsigned int base,
 	desc.hrdmal = size;
 
 	g_crypto->get_hash(&desc, 1, (unsigned int *)phash, size);
+
+	/* @brief: software reset the sss controller (temporary) */
+	sssc_reset(TRUE);
 }
 
 /* @brief: Generate hashes using header and boot-images. */
