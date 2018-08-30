@@ -15,7 +15,7 @@
 #include <secure_rw.h>
 
 /* Gloval Variables (To Do..After.. ) */
-static struct s_rw_filter g_s_rw_list[1] =
+static struct s_rw_filter g_s_rw_list[2] =
 {
 	/* Index 0 - Alive GPIO */
 	{
@@ -23,11 +23,17 @@ static struct s_rw_filter g_s_rw_list[1] =
 		(PHY_BASEADDR_ALIVE + 0x25C),
 		0xFFFFFFFF
 	},
+	/* Index 1 - eFuse HPM */
+	{
+		(PHY_BASEADDR_ECID_SECURE_MODULE + 0x530),
+		(PHY_BASEADDR_ECID_SECURE_MODULE + 0x530 + 0x3F),
+		0xFFFFFFFF
+	},
 };
 
 static unsigned int check_rw_list(unsigned int addr, unsigned int value)
 {
-	unsigned int index = 0, cnt;
+	volatile unsigned int index = 0, cnt;
 
 	cnt = (sizeof(g_s_rw_list)/sizeof(struct s_rw_filter));
 
@@ -37,7 +43,6 @@ static unsigned int check_rw_list(unsigned int addr, unsigned int value)
 			value &= g_s_rw_list[index].mask;
 			return value;
 		}
-
 	} while(index++ < cnt);
 
 	return value;
@@ -45,10 +50,7 @@ static unsigned int check_rw_list(unsigned int addr, unsigned int value)
 
 int secure_write_32(void *addr, unsigned int value)
 {
-	int cal_value;
-
-	/* @brief: Only Alive GPIO */
-	addr += PHY_BASEADDR_ALIVE;
+	volatile unsigned int cal_value;
 
 	/* Check the Secure R/W Memory */
 	cal_value = check_rw_list((unsigned int)addr, value);
@@ -58,10 +60,7 @@ int secure_write_32(void *addr, unsigned int value)
 
 int secure_read_32(void *addr)
 {
-	int cal_value, value;
-
-	/* @brief: Only Alive GPIO */
-	addr += PHY_BASEADDR_ALIVE;
+	volatile unsigned int cal_value, value;
 
 	value = mmio_read_32(addr);
 
