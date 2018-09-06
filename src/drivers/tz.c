@@ -35,7 +35,7 @@ union tzinfo_reg sys_buscfg[5] = {
 		SECURE_ONLY, RESERVED   , RESERVED   , EVERY_ONE  ,		/* [12]:GPIO_0__SYSREG__SECURE, [13]: RSVD,			[14]: RSVD,			[15]: GPIO_4				*/
 		EVERY_ONE  , EVERY_ONE  , EVERY_ONE  , EVERY_ONE  ,		/* [16]:GPIO_3,			[17]: GPIO_2,			[18]: GPIO_1,			[19]: GPIO_0				*/
 		RESERVED   , SECURE_ONLY, SECURE_ONLY, SECURE_ONLY,		/* [20]:RSVD,			[21]: SMC_0__SYSREG__CFG,	[22]: CAN_1__SYSREG__CAN,	[23]: CAN_1__SYSREG__RAM		*/
-		SECURE_ONLY, RESERVED   , EVERY_ONE  , SECURE_ONLY,		/* [24]:TMU_0,			[25]: RSVD,     		[26]: SYSCTRLTOP_0__SYSREG__NONSECURE,	[27]: SYSCTRLTOP_0		*/
+		SECURE_ONLY, RESERVED   , EVERY_ONE  , EVERY_ONE  ,		/* [24]:TMU_0,			[25]: RSVD,     		[26]: SYSCTRLTOP_0__SYSREG__NONSECURE,	[27]: SYSCTRLTOP_0		*/
 		SECURE_ONLY, SECURE_ONLY, SECURE_ONLY, SECURE_ONLY,		/* [28]:ECID_0__SYSREG__SECURE, [29]: ECID_0,			[30]: SYSREG_SYS_0__SYSREG__SECURE,	[31]: SYSREG_SYS_0		*/
 	},
 	/* sys_buscfg[2] -> BUSCFG8 */
@@ -294,6 +294,8 @@ void tzpc_set_ddr(void)
 	base = (volatile unsigned char *)PHY_BASEADDR_SYSREG_DDR;
 	mmio_write_32(&base[0x024], ddr_bus_secure[5].value);
 //	mmio_set_32(&base[0x030], 0xFF1);
+//	mmio_set_32(&base[0x8000], (1 << 9));
+
 	set_tzasc();
 }
 

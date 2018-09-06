@@ -43,7 +43,7 @@ enum {
 
 /* Function Define */
  int plat_next_load(struct nx_bootmanager *pbm, unsigned int option);
-void plat_load(unsigned int is_resume, struct nx_bootmanager *pbm);
+void plat_load(int is_resume, struct nx_bootmanager *pbm);
  int plat_s_load(struct platform_info *ppi);
 
 #endif /* #ifndef __PLAT_LOAD_H__ */

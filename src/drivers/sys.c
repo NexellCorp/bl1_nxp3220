@@ -22,19 +22,24 @@ extern struct nx_alive_reg *g_alive_reg;
 
 #define VDDPWRON_DDR_GPIO_NUM		11
 
-void vddpwron_ddr_on(unsigned int pad)
+#define DPHY_PAD_CTRL			(0x23091000 + 0x120)
+
+void vddpwron_ddr_on(void)
 {
-	unsigned int value = (1 << pad);
+	unsigned int reg_value = (1 << VDDPWRON_DDR_GPIO_NUM);
 
-	/* @brief: Disable the Pull Enable */
-	mmio_set_32(&g_alive_reg->gpio_pullupenb_rst, value);
-	mmio_set_32(&g_alive_reg->gpio_pad_outenb_rst, value);
-	mmio_set_32(&g_alive_reg->gpio_inputenb_rst, value);
+	mmio_set_32(&g_alive_reg->gpio_pullupenb_rst, reg_value);
+	mmio_set_32(&g_alive_reg->gpio_pad_outenb_rst, reg_value);
+	mmio_set_32(&g_alive_reg->gpio_inputenb_rst, reg_value);
 
-	/* step xx. set the alive gpio */
-	mmio_set_32(&g_alive_reg->gpio_padout_rst, value);			// outpad - low
-	mmio_set_32(&g_alive_reg->gpio_padout_set, value);			// outpad - high
-	mmio_set_32(&g_alive_reg->gpio_pad_outenb_set, value);			// output enable
+	mmio_set_32(&g_alive_reg->gpio_padout_rst, reg_value);			/* outpad - low  */
+	mmio_set_32(&g_alive_reg->gpio_padout_set, reg_value);			/* outpad - high */
+	mmio_set_32(&g_alive_reg->gpio_pad_outenb_set, reg_value);		/* output enable */
+
+	do {
+		reg_value = mmio_read_32(DPHY_PAD_CTRL);
+		reg_value = ((reg_value >> 31) & 0x1);
+	} while (reg_value != 1);
 }
 
 #define HRESETO_GPIO_NUM		10
@@ -74,7 +79,7 @@ void system_initialize(void)
 	nx_gpio_bit_access();
 
 	/* @brief: Disable pull-up for VDDPOWRON pin  */
-	vddpwron_ddr_on(VDDPWRON_DDR_GPIO_NUM);
+//	vddpwron_ddr_on(VDDPWRON_DDR_GPIO_NUM);
 
 	/* @brief: Enable the HRESETO function  */
 	hreseto_set_repwron(HRESETO_GPIO_NUM);

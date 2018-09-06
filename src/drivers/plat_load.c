@@ -36,6 +36,7 @@ extern unsigned int emmc_next_bl;
 /* Extern Functions */
 extern void (*enter_self_refresh)(void);
 extern void (*exit_self_refresh)(void);
+
 extern void (*pmic_poweroff)(void);
 
 extern struct nx_vddpwr_reg *g_vddpwr_reg;
@@ -77,13 +78,13 @@ static int check_platfrom(struct nx_bootmanager *pbm,
 static void plat_s_launch(unsigned int is_resume,
 		unsigned int secure_l, unsigned int n_secure_l, int is_secure)
 {
-	while (!serial_tx_empty());
-
 	if (is_secure) {
 		SYSMSG("Launch to 0x%08X\r\n", (unsigned int)secure_l);
+		while (!serial_tx_empty());
 		secure_launch(is_resume, secure_l, n_secure_l, 0);
 	} else {
 		SYSMSG("Launch to 0x%08X\r\n", (unsigned int)n_secure_l);
+		while (!serial_tx_empty());
 		non_secure_launch(is_resume, n_secure_l);
 	}
 }
@@ -138,7 +139,7 @@ int plat_next_load(struct nx_bootmanager *pbm, unsigned int option)
 	return ret;
 }
 
-void plat_load(unsigned int is_resume, struct nx_bootmanager *pbm)
+void plat_load(int is_resume, struct nx_bootmanager *pbm)
 {
 	unsigned int option = get_boption();
 	int success;
@@ -158,18 +159,18 @@ void plat_load(unsigned int is_resume, struct nx_bootmanager *pbm)
 		plat_s_launch(is_resume, 0, pbm->bi.launch_addr, 0);
 	}
 
-	printf("Platform Load Failed!! (%X) \r\n", success);
+	ERROR("Platform Load Failed!! (%X) \r\n", success);
 	while(1);
 }
 
 int plat_s_load(struct platform_info *ppi)
 {
 	struct nx_bootmanager bm, *pbm;
-	unsigned int is_resume = check_suspend_state();
 	unsigned int is_secure_os = ((ppi->is_loadmark >> 0) & 0xF);
 	unsigned int is_sss_f = ((ppi->is_loadmark >> 8) & 0xF);
 	unsigned int option = get_boption();
 	unsigned int secure_l = 0;
+	int is_resume = check_suspend_state();
 	int success = 0;
 
 	pbm = ((struct nx_bootmanager *)&bm);
@@ -185,12 +186,17 @@ int plat_s_load(struct platform_info *ppi)
 	 * @brief: After confirming the resume status, perform the necessary
 	 * resume step at boot time.
 	 */
-	if (is_resume) {
-		success = check_system_resume(&is_resume, is_secure_os,
+	if (is_resume == true) {
+		success = system_resume(&is_resume, is_secure_os,
 				&secure_l, &pbm->bi.launch_addr);
-		if (success == 0)
+		if (success == 0) {
+			/* @brief: clear the suspend mark */
+			suspend_mark_clear();
 			goto plat_launch;
+		}
 	}
+	/* @brief: clear the suspend mark */
+	suspend_mark_clear();
 
 	if (is_secure_os) {
 		if (is_sss_f) {
@@ -201,10 +207,10 @@ int plat_s_load(struct platform_info *ppi)
 				WARN("SSS Firmware Load Failed!! (%d) \r\n", success);
 				return -SSS_F_LOAD_FAILED;
 			}
-			success = check_platfrom(pbm, &g_rsa_public_key[256]);
+//			success = check_platfrom(pbm, &g_rsa_public_key[256]);
 		}
 
-		if (is_resume == 0) {
+		if (is_resume != true) {
 			NOTICE("Load the Secure OS... \r\n");
 			g_nsih->dbi.device_addr = check_load_addr(ppi->s_dev_addr);
 			success = plat_next_load(pbm, option);
@@ -212,7 +218,7 @@ int plat_s_load(struct platform_info *ppi)
 				WARN("Secure-OS Load Failed!! (%d) \r\n", success);
 				return -BL32_LOAD_FAILED;
 			}
-			success = check_platfrom(pbm, &g_rsa_public_key[256]);
+//			success = check_platfrom(pbm, &g_rsa_public_key[256]);
 			secure_l = g_ppi->s_launch_addr  = pbm->bi.launch_addr;
 
 			/* @brief: set the tzasc regionX for secure-os */
@@ -221,7 +227,7 @@ int plat_s_load(struct platform_info *ppi)
 		}
 	}
 
-	if (is_resume == 0) {
+	if (is_resume != true) {
 		NOTICE("Load the Non-Secure OS... \r\n");
 		g_nsih->dbi.device_addr = check_load_addr(ppi->n_dev_addr);
 		success = plat_next_load(pbm, option);
@@ -229,7 +235,7 @@ int plat_s_load(struct platform_info *ppi)
 			ERROR("Boot Loade 3-3 Load Failed!! (%d) \r\n", success);
 			return -BL33_LOAD_FAILED;
 		}
-		success = check_platfrom(pbm, &g_rsa_public_key[256]);
+//		success = check_platfrom(pbm, &g_rsa_public_key[256]);
 	}
 	/* @brief: Copies the header for reference in BL2 */
 	memcpy((void*)USERKEY_BASEADDR, (void*)&pbm->bi, sizeof(struct sbi_header));

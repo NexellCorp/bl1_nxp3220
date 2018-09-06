@@ -16,6 +16,7 @@
 #include <secure_rw.h>
 #include <pmu.h>
 #include <tz.h>
+#include <sys.h>
 #include <plat_load.h>
 
 /* Macro: Dispatcher Scure Service for User */
