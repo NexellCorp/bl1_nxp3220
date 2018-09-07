@@ -294,7 +294,6 @@ void tzpc_set_ddr(void)
 	base = (volatile unsigned char *)PHY_BASEADDR_SYSREG_DDR;
 	mmio_write_32(&base[0x024], ddr_bus_secure[5].value);
 //	mmio_set_32(&base[0x030], 0xFF1);
-//	mmio_set_32(&base[0x8000], (1 << 9));
 
 	set_tzasc();
 }

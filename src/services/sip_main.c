@@ -51,7 +51,8 @@ int sip_smc_handler(unsigned int smc_fid,
 			return secure_read_32((void*)r1);
 			break;
 		default:
-			WARN("Unimplemented SIP Service Call: 0x%x\r\n", smc_fid);
+			/* FIXME: this can cause data abort */
+			/* WARN("Unimplemented SIP Service Call: 0x%x\r\n", smc_fid); */
 			break;
 	}
 

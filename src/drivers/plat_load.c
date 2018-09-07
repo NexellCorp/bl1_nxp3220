@@ -189,14 +189,12 @@ int plat_s_load(struct platform_info *ppi)
 	if (is_resume == true) {
 		success = system_resume(&is_resume, is_secure_os,
 				&secure_l, &pbm->bi.launch_addr);
+		g_ppi->s_launch_addr = secure_l;
+
 		if (success == 0) {
-			/* @brief: clear the suspend mark */
-			suspend_mark_clear();
 			goto plat_launch;
 		}
 	}
-	/* @brief: clear the suspend mark */
-	suspend_mark_clear();
 
 	if (is_secure_os) {
 		if (is_sss_f) {

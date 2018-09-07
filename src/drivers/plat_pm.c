@@ -158,7 +158,7 @@ static void system_vdd_pwroff(void)
 	mmio_clear_32(&g_vddpwr_reg->disable_cpu_wfi, (1 << 0));
 
 	/* step 04. all alive pend pending clear until power down. */
-	mmio_write_32(&g_alive_reg->gpio_detect_pend, 0xFF);
+	mmio_write_32(&g_alive_reg->gpio_detect_pend, 0xFFFF);
 
 	/* step 05. 1 Cycle(Unit: 21.333us) (24Mhz Osillator Clock(40ns)*512) */
 	mmio_write_32(&g_alive_reg->vddoffcnt_value, 0x0000000);
@@ -238,16 +238,6 @@ void system_suspend(unsigned int entry_point)
 	system_vdd_pwroff();
 
 	while(1);
-}
-
-void suspend_mark_clear(void)
-{
-	mmio_write_32(&g_vddpwr_reg->new_scratch[0], 0);
-	mmio_write_32(&g_vddpwr_reg->new_scratch[1], 0);
-	mmio_write_32(&g_vddpwr_reg->new_scratch[2], 0);
-	mmio_write_32(&g_vddpwr_reg->new_scratch[3], 0);
-	mmio_write_32(&g_vddpwr_reg->new_scratch[4], 0);
-	mmio_write_32(&g_vddpwr_reg->new_scratch[5], 0);
 }
 
 int system_resume(int *is_resume, unsigned int is_secure_os,
