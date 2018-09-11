@@ -121,8 +121,8 @@ int sss_load(struct nx_bootmanager *pbm, unsigned int option)
 	int success, res;
 
 	success = plat_next_load(pbm, option);
-	if (success != FALSE)
-		return false;
+	if (success != TRUE)
+		return FALSE;
 
 	/* @brief: CM0 SRAM Locking after firmware loading */
 	mmio_set_32(CM0_SRAM_ACCESS_CONTROL, 0x1);
@@ -144,5 +144,5 @@ int sss_load(struct nx_bootmanager *pbm, unsigned int option)
 		return 0;
 	}
 
-	return true;
+	return TRUE;
 }

@@ -107,7 +107,7 @@ int spiboot(struct nx_bootmanager *pbm, unsigned int option)
 	int flash_addr = g_nsih->dbi.device_addr;
 	int read_size, extra_size = 256;
 
-	int ret = 0;
+	int ret = TRUE;
 
 	/* step 00. get the bl0 function-table address */
 	g_spifn = ((struct nx_spi_fntptr *)&g_bl1_fn->spi_fn);
@@ -130,7 +130,7 @@ int spiboot(struct nx_bootmanager *pbm, unsigned int option)
 	/* step 02-2. check the nexell signature */
 	if (pbm->bi.signature != HEADER_ID) {
 		ERROR("Header Signature Failed! (%08x)\r\n", pbm->bi.signature);
-		ret = -1;
+		ret = FALSE;
 		goto error;
 	}
 

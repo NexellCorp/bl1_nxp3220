@@ -42,7 +42,7 @@ int uartboot(struct nx_bootmanager *pbm, unsigned int option)
 
 	int size = 0;;
 	int err, res;
-	int ret = 0;
+	int ret = TRUE;
 
 	info.chan = channel;
 	info.mode = xyzModem_ymodem;
@@ -73,7 +73,7 @@ int uartboot(struct nx_bootmanager *pbm, unsigned int option)
 	/* step 03-2. check the nexell signature */
 	if (pbm->bi.signature != HEADER_ID) {
 		ERROR("Header Signature Fail!! (%08x)\r\n", pbm->bi.signature);
-		ret = -1;
+		ret = FALSE;
 		goto error;
 	}
 
@@ -91,12 +91,6 @@ int uartboot(struct nx_bootmanager *pbm, unsigned int option)
 	/* step 06. close the ymodem protocol */
 	g_uartfn->xyzModem_stream_close(&err);
 	g_uartfn->xyzModem_stream_terminate(&xyz, FALSE, g_uartfn->xyzModem_getc);
-
-	if (ret < 0) {
-		ERROR("Receive Data Broken!!! \r\n");
-		ret = -1;
-		goto error;
-	}
 error:
 
 	return ret;

@@ -315,7 +315,7 @@ static int emmcboot_n(struct nx_bootmanager *pbm, sdxcboot_status *pst,
 	unsigned int *f_sector = (unsigned int *)&pbm->bi;
 	register unsigned int sd_speed, bitwidth;
 	unsigned int mode, sector_cnt, rsn = 0;
-	register int ret = FALSE;
+	int ret = TRUE;
 
 	/* @brief: Confirm ? */
 	if (pst->bhigh_speed == TRUE)
@@ -364,7 +364,7 @@ static int emmcboot_n(struct nx_bootmanager *pbm, sdxcboot_status *pst,
 	 * SD/eMMC is because reading the blocks in the unit 512
 	 * However, since sign data is 256 bytes, dummy data exists in 256 bytes.
 	 */
-
+	ret = g_bl1_fn->gpt_fn.is_gpt_part((unsigned char *)f_sector);
 	if (g_sdmmcfn->sdmmc_read_sectors(pst, rsn++, 1, f_sector) == FALSE) {
 		ERROR("%s Header Read Fail! \r\n", ret ? "Boot" : "GPT");
 		goto error;
@@ -408,7 +408,7 @@ int sdmmcboot(struct nx_bootmanager* pbm, sdxcboot_status *pbt_st, unsigned int 
 	unsigned int *f_sector = (unsigned int *)&pbm->bi;
 	unsigned int sector_cnt;
 	unsigned int rsn = 0;
-	int ret = FALSE;
+	int ret = TRUE;
 
 	/* step 01-1. open the sd/emmc device */
 	if (TRUE != g_sdmmcfn->sdmmc_open(pbt_st, option)) {
@@ -471,7 +471,7 @@ int sdmmcboot(struct nx_bootmanager* pbm, sdxcboot_status *pbt_st, unsigned int 
 	/* step 01-6. check the nexell signature */
 	if (pbi->signature != HEADER_ID) {
 		ERROR("Not bootable image (%08x).\r\n", pbi->signature);
-		return 0;
+		goto error;
 	}
 
 	DRV_DBGOUT("Load Addr: 0x%X, Load Size:0x%X, Launch Addr: 0x%08X. \r\n",

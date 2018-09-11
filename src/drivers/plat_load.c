@@ -47,12 +47,10 @@ static int check_load_addr(unsigned int load_addr)
 }
 
 static int check_platfrom(struct nx_bootmanager *pbm,
-				unsigned char *rsa_public_key)
+			unsigned char *rsa_public_key, unsigned int encrypted)
 {
 	unsigned int option = get_boption();
-	unsigned int s_option = efuse_get_cfg();
 	int verify_enb = ((option >> VERIFY) & 0x3);
-	int encrypted = ((s_option >> 1) & 0x1);
 	int ret = 0;
 
 	/* @brief: verification the hash data */
@@ -92,7 +90,7 @@ static void plat_s_launch(unsigned int is_resume,
 int plat_next_load(struct nx_bootmanager *pbm, unsigned int option)
 {
 	int device = ((option >> BOOTMODE) & 0x7);
-	int ret = 0;
+	int ret = TRUE;
 
 	switch (device) {
 		case EMMCBOOT:
@@ -101,7 +99,7 @@ int plat_next_load(struct nx_bootmanager *pbm, unsigned int option)
 			break;
 
 		case USBBOOT:
-			SYSMSG("\nLoading from USB...\r\n");
+			SYSMSG("Loading from USB...\r\n");
 			ret = usbboot(pbm);
 			break;
 #if 0		/* todo */
@@ -146,10 +144,10 @@ void plat_load(int is_resume, struct nx_bootmanager *pbm)
 
 	g_nsih->dbi.device_addr = BL2_DEVICE_ADDR;
 	success = plat_next_load(pbm, option);
-
-//	if (success >= 0)
-//		success = check_platfrom(pbm, &g_rsa_public_key[256]);
-
+#if 0
+	if (success >= 0)
+		success = check_platfrom(pbm, &g_rsa_public_key[256], 0);
+#endif
 	if (success >= 0) {
 		/* @brief: Relocate the header of base address */
 		memcpy((void*)RE_HEADER_BASEADDR, (void*)&pbm->bi,
@@ -166,10 +164,11 @@ void plat_load(int is_resume, struct nx_bootmanager *pbm)
 int plat_s_load(struct platform_info *ppi)
 {
 	struct nx_bootmanager bm, *pbm;
-	unsigned int is_secure_os = ((ppi->is_loadmark >> 0) & 0xF);
-	unsigned int is_sss_f = ((ppi->is_loadmark >> 8) & 0xF);
+	unsigned int is_secure_os, is_sss_f, encrypted;
 	unsigned int option = get_boption();
+	unsigned int device = ((option >> BOOTMODE) & 0x7);
 	unsigned int secure_l = 0;
+
 	int is_resume = check_suspend_state();
 	int success = 0;
 
@@ -177,10 +176,20 @@ int plat_s_load(struct platform_info *ppi)
 	g_ppi = ((struct platform_manager *)&g_pi);
 	memcpy((void*)g_ppi, (void*)ppi, sizeof(struct platform_info));
 
-	/* @brief: enter_self_refresh function address */
 	enter_self_refresh = (void (*)(void))ppi->ensr_func;
 	exit_self_refresh = (void (*)(void))ppi->exsr_func;
 	pmic_poweroff = (void (*)(void))ppi->pmic_poweroff;
+
+	/*
+	 * @brief: If it is a block-device, it is unconditionally read.
+	 * It checks the header and returns the result.
+	 */
+	if ((device != USBBOOT) && (device != UARTBOOT)) {
+		is_secure_os = is_sss_f = TRUE;
+	} else {
+		is_secure_os = ((ppi->is_loadmark >> 0) & 0xF);
+		is_sss_f = ((ppi->is_loadmark >> 8) & 0xF);
+	}
 
 	/*
 	 * @brief: After confirming the resume status, perform the necessary
@@ -190,10 +199,8 @@ int plat_s_load(struct platform_info *ppi)
 		success = system_resume(&is_resume, is_secure_os,
 				&secure_l, &pbm->bi.launch_addr);
 		g_ppi->s_launch_addr = secure_l;
-
-		if (success == 0) {
+		if (success == 0)
 			goto plat_launch;
-		}
 	}
 
 	if (is_secure_os) {
@@ -201,22 +208,27 @@ int plat_s_load(struct platform_info *ppi)
 			NOTICE("Load the SSS Firmware.. \r\n");
 			g_nsih->dbi.device_addr = check_load_addr(ppi->sf_dev_addr);
 			success = sss_load(pbm, option);
-			if (success < 0) {
+			if (success != TRUE)
 				WARN("SSS Firmware Load Failed!! (%d) \r\n", success);
-				return -SSS_F_LOAD_FAILED;
-			}
-//			success = check_platfrom(pbm, &g_rsa_public_key[256]);
+#if 0
+			else
+				success = check_platfrom(pbm,
+					&g_rsa_public_key[256], 0);
+#endif
 		}
 
 		if (is_resume != true) {
 			NOTICE("Load the Secure OS... \r\n");
 			g_nsih->dbi.device_addr = check_load_addr(ppi->s_dev_addr);
 			success = plat_next_load(pbm, option);
-			if (success < 0) {
+			if (success != TRUE) {
 				WARN("Secure-OS Load Failed!! (%d) \r\n", success);
 				return -BL32_LOAD_FAILED;
 			}
-//			success = check_platfrom(pbm, &g_rsa_public_key[256]);
+			encrypted = (pbm->bi.reserved2 & 0xF);
+			success = check_platfrom(pbm,
+					&g_rsa_public_key[256], encrypted);
+
 			secure_l = g_ppi->s_launch_addr  = pbm->bi.launch_addr;
 
 			/* @brief: set the tzasc regionX for secure-os */
@@ -229,11 +241,13 @@ int plat_s_load(struct platform_info *ppi)
 		NOTICE("Load the Non-Secure OS... \r\n");
 		g_nsih->dbi.device_addr = check_load_addr(ppi->n_dev_addr);
 		success = plat_next_load(pbm, option);
-		if (success < 0) {
+		if (success != TRUE) {
 			ERROR("Boot Loade 3-3 Load Failed!! (%d) \r\n", success);
 			return -BL33_LOAD_FAILED;
 		}
-//		success = check_platfrom(pbm, &g_rsa_public_key[256]);
+#if 0
+		success = check_platfrom(pbm, &g_rsa_public_key[256], 0);
+#endif
 	}
 	/* @brief: Copies the header for reference in BL2 */
 	memcpy((void*)USERKEY_BASEADDR, (void*)&pbm->bi, sizeof(struct sbi_header));

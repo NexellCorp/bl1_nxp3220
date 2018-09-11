@@ -35,7 +35,7 @@ int nandboot(struct nx_bootmanager *pbm, unsigned int option)
 	struct nandbootinfo *pnbi = ((struct nandbootinfo *)&nbi);
 	unsigned int hash_size = 256;
 	unsigned int nbuf[1024 / 4];
-	int timeout, ret = 0;
+	int timeout, ret = FALSE;
 
 	/* step 00. get the bl0 function-table address */
 	g_nand_fn = ((struct nx_nand_fnptr *)&g_bl1_fn->nand_fn);
@@ -49,28 +49,24 @@ int nandboot(struct nx_bootmanager *pbm, unsigned int option)
 	while (!(mmio_read_32(&g_nandc_reg->status) & (1 << 28)) && --timeout);	// Wait for RNB Status
 	if (timeout == 0) {
 		ERROR("Nand is busy for a long time!!\r\n");
-		ret = 0;
 		goto error;
 	}
 
 	/* step 01-2. reset the nand device */
 	if (g_nand_fn->nand_reset() == 0) {
-		ret = 1;
 		goto error;
 	}
 
 	/* step 02-1. read the boot header */
 	ret = g_nand_fn->nand_read(pnbi, (void *)&pbm->bi,
 			sizeof(struct sbi_header));
-	if (ret == 0) {
+	if (ret == FALSE) {
 		ERROR("Nand boot header read failure!! \r\n");
-		ret = -1;
 		goto error;
 	}
 	/* step 02-2. check the nexell signature */
 	if (pbm->bi.signature != HEADER_ID) {
 		ERROR("Header Signature Failed! (%08x)\r\n", pbm->bi.signature);
-		ret = -1;
 		goto error;
 	}
 
@@ -78,18 +74,16 @@ int nandboot(struct nx_bootmanager *pbm, unsigned int option)
 	ret = g_nand_fn->nand_read(pnbi,
 			((void *)&pbm->rsa_encrypted_sha256_hash[0]),
 			hash_size);
-	if (ret == 0) {
+	if (ret == FALSE) {
 		ERROR("Nand boot hash read failure!! \r\n");
-		ret = -1;
 		goto error;
 	}
 
 	/* step 04. read the boot-image */
 	ret = g_nand_fn->nand_read(pnbi, (void*)pbm->bi.load_addr,
 		pbm->bi.load_size);
-	if (ret == 0) {
+	if (ret == FALSE) {
 		ERROR("Nand boot boot-image read failure!! \r\n");
-		ret = -1;
 		goto error;
 	}
 

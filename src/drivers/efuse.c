@@ -98,8 +98,3 @@ int efuse_get_ecid(int index)
 {
 	return mmio_read_32(&g_efuse_reg->ecid[index]);
 }
-
-int efuse_get_cfg(void)
-{
-	return mmio_read_32(&g_efuse_reg->efuse_cfg);
-}

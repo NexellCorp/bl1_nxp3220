@@ -352,5 +352,5 @@ int usbboot(struct nx_bootmanager *pbm)
 
 	SYSMSG("USB Download Done.\r\n");
 
-	return true;
+	return TRUE;
 }
