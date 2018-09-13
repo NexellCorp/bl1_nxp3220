@@ -28,6 +28,7 @@ void system_core_reset(void);
 int check_suspend_hash(void);
 void suspend_mark(unsigned int base,
 	unsigned int size, unsigned int entry_point);
+void suspend_mark_clear(void);
 void system_suspend(unsigned int entry_point);
  int system_resume(int *is_resume, unsigned int is_secure_os,
 	 unsigned int *s_launch, unsigned int *ns_launch);

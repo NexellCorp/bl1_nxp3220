@@ -41,11 +41,6 @@ enum {
 	BL33_LOAD_FAILED  = 4
 };
 
-enum {
-	AES_CBC_ENCRYPED = (1 << 0),
-	RSA_VERIFY_IMAGE = (1 << 1)
-};
-
 /* Function Define */
  int plat_next_load(struct nx_bootmanager *pbm, unsigned int option);
 void plat_load(int is_resume, struct nx_bootmanager *pbm);

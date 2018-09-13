@@ -199,8 +199,12 @@ int plat_s_load(struct platform_info *ppi)
 		success = system_resume(&is_resume, is_secure_os,
 				&secure_l, &pbm->bi.launch_addr);
 		g_ppi->s_launch_addr = secure_l;
-		if (success == 0)
+		if (success == 0) {
+			suspend_mark_clear();
 			goto plat_launch;
+		}
+	} else {
+		suspend_mark_clear();
 	}
 
 	if (is_secure_os) {

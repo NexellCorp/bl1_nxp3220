@@ -208,6 +208,16 @@ void suspend_mark(unsigned int base, unsigned int size, unsigned int entry_point
 	mmio_write_32(&g_vddpwr_reg->new_scratch[5], g_ppi->s_launch_addr);
 }
 
+void suspend_mark_clear(void)
+{
+	mmio_write_32(&g_vddpwr_reg->new_scratch[0], 0);
+	mmio_write_32(&g_vddpwr_reg->new_scratch[1], 0);
+	mmio_write_32(&g_vddpwr_reg->new_scratch[2], 0);
+	mmio_write_32(&g_vddpwr_reg->new_scratch[3], 0);
+	mmio_write_32(&g_vddpwr_reg->new_scratch[4], 0);
+	mmio_write_32(&g_vddpwr_reg->new_scratch[5], 0);
+}
+
 #define RSTRELEASE_DDR_AXI			(0x23000000 + 0x400 + 0x30)
 #define RSTENTER_DDR_AXI			(0x23000000 + 0x400 + 0x40)
 
