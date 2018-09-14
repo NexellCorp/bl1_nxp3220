@@ -26,7 +26,7 @@ static struct s_rw_filter g_s_rw_list[2] =
 	/* Index 1 - eFuse HPM */
 	{
 		(PHY_BASEADDR_ECID_SECURE_MODULE + 0x530),
-		(PHY_BASEADDR_ECID_SECURE_MODULE + 0x530 + 0x3F),
+		(PHY_BASEADDR_ECID_SECURE_MODULE + 0x530 + 0xF),
 		0xFFFFFFFF
 	},
 };
