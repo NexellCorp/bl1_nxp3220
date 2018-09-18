@@ -66,7 +66,7 @@ void main(void)
 	int serial_ch = g_nsih->serial_ch;
 	int cpu_id = get_cpuid();
 	int s_early = false;
-	int is_resume = 0;
+	unsigned int is_resume = FALSE;
 
 	/* @brief: Disable the No Boot Message option on BL0. */
 	bl0_bootmsg_on(TRUE);

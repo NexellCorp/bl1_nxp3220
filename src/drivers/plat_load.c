@@ -137,7 +137,7 @@ int plat_next_load(struct nx_bootmanager *pbm, unsigned int option)
 	return ret;
 }
 
-void plat_load(int is_resume, struct nx_bootmanager *pbm)
+void plat_load(unsigned int is_resume, struct nx_bootmanager *pbm)
 {
 	unsigned int option = get_boption();
 	int success;
@@ -169,8 +169,8 @@ int plat_s_load(struct platform_info *ppi)
 	unsigned int device = ((option >> BOOTMODE) & 0x7);
 	unsigned int secure_l = 0;
 
-	int is_resume = check_suspend_state();
-	int success = 0;
+	unsigned int is_resume = check_suspend_state();
+	unsigned int success = 0;
 
 	pbm = ((struct nx_bootmanager *)&bm);
 	g_ppi = ((struct platform_manager *)&g_pi);
@@ -195,7 +195,7 @@ int plat_s_load(struct platform_info *ppi)
 	 * @brief: After confirming the resume status, perform the necessary
 	 * resume step at boot time.
 	 */
-	if (is_resume == true) {
+	if (is_resume == TRUE) {
 		success = system_resume(&is_resume, is_secure_os,
 				&secure_l, &pbm->bi.launch_addr);
 		g_ppi->s_launch_addr = secure_l;
@@ -221,7 +221,7 @@ int plat_s_load(struct platform_info *ppi)
 #endif
 		}
 
-		if (is_resume != true) {
+		if (is_resume != TRUE) {
 			NOTICE("Load the Secure OS... \r\n");
 			g_nsih->dbi.device_addr = check_load_addr(ppi->s_dev_addr);
 			success = plat_next_load(pbm, option);
@@ -241,7 +241,7 @@ int plat_s_load(struct platform_info *ppi)
 		}
 	}
 
-	if (is_resume != true) {
+	if (is_resume != TRUE) {
 		NOTICE("Load the Non-Secure OS... \r\n");
 		g_nsih->dbi.device_addr = check_load_addr(ppi->n_dev_addr);
 		success = plat_next_load(pbm, option);

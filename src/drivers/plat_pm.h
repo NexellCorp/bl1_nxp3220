@@ -30,7 +30,7 @@ void suspend_mark(unsigned int base,
 	unsigned int size, unsigned int entry_point);
 void suspend_mark_clear(void);
 void system_suspend(unsigned int entry_point);
- int system_resume(int *is_resume, unsigned int is_secure_os,
+ int system_resume(unsigned int *is_resume, unsigned int is_secure_os,
 	 unsigned int *s_launch, unsigned int *ns_launch);
 void system_power_off(void);
 

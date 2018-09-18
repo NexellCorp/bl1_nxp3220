@@ -63,9 +63,9 @@ int check_suspend_state(void)
 
 	reg_value = mmio_read_32(&g_vddpwr_reg->new_scratch[0]);
 	if (reg_value != NX_SUSPEND_SIGNATURE)
-		return false;
+		return FALSE;
 
-	return true;
+	return TRUE;
 }
 
 int system_cpu_check(unsigned int cpu_id)
@@ -250,7 +250,7 @@ void system_suspend(unsigned int entry_point)
 	while(1);
 }
 
-int system_resume(int *is_resume, unsigned int is_secure_os,
+int system_resume(unsigned int *is_resume, unsigned int is_secure_os,
 	unsigned int *s_launch, unsigned int *ns_launch)
 {
 	int success;
@@ -261,7 +261,7 @@ int system_resume(int *is_resume, unsigned int is_secure_os,
 			*s_launch = mmio_read_32(&g_vddpwr_reg->new_scratch[5]);
 		*ns_launch = mmio_read_32(&g_vddpwr_reg->new_scratch[1]);
 	} else {
-		*is_resume = false;
+		*is_resume = FALSE;
 		ERROR("Resume failure due to invalid hash value!! \r\n");
 		NOTICE("Performs a Cold Boot Sequence. \r\n");
 	}
