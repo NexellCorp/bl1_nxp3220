@@ -15,7 +15,7 @@
 #include <secure_rw.h>
 
 /* Gloval Variables (To Do..After.. ) */
-static struct s_rw_filter g_s_rw_list[2] =
+static struct s_rw_filter g_s_rw_list[7] =
 {
 	/* Index 0 - Alive GPIO */
 	{
@@ -27,6 +27,36 @@ static struct s_rw_filter g_s_rw_list[2] =
 	{
 		(PHY_BASEADDR_ECID_SECURE_MODULE + 0x530),
 		(PHY_BASEADDR_ECID_SECURE_MODULE + 0x530 + 0xF),
+		0xFFFFFFFF
+	},
+	/* Index 2 - SYS BUS GPV M0 */
+	{
+		(PHY_BASEADDR_SYS_BUS_GPV_M0),
+		(PHY_BASEADDR_SYS_BUS_GPV_M0 + 0x138),
+		0xFFFFFFFF
+	},
+	/* Index 3 - SYS BUS GPV M1 */
+	{
+		(PHY_BASEADDR_SYS_BUS_GPV_M1),
+		(PHY_BASEADDR_SYS_BUS_GPV_M1 + 0x138),
+		0xFFFFFFFF
+	},
+	/* Index 4 - SYS BUS GPV M2 */
+	{
+		(PHY_BASEADDR_SYS_BUS_GPV_M2),
+		(PHY_BASEADDR_SYS_BUS_GPV_M2 + 0x138),
+		0xFFFFFFFF
+	},
+	/* Index 5 - SYS BUS GPV M3 */
+	{
+		(PHY_BASEADDR_SYS_BUS_GPV_M3),
+		(PHY_BASEADDR_SYS_BUS_GPV_M3 + 0x138),
+		0xFFFFFFFF
+	},
+	/* Index 6 - SYS BUS GPV M4 */
+	{
+		(PHY_BASEADDR_SYS_BUS_GPV_M4),
+		(PHY_BASEADDR_SYS_BUS_GPV_M4 + 0x138),
 		0xFFFFFFFF
 	},
 };
