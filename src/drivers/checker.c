@@ -52,13 +52,15 @@ void sss_generate_hash(unsigned int base,
 }
 
 /* @brief: Generate hashes using header and boot-images. */
-void bimage_generate_hash(struct nx_bootmanager *pbm,
-			unsigned char *rsa_public_key, unsigned char* phash)
+void bimage_generate_hash(struct nx_bootmanager *pbm, unsigned char* phash)
 {
 	struct nx_hrdmadesc desc[3];
+	char zero[256];
 	int hsize = (int)sizeof(struct sbi_header);
-	int keysize = 256;
+	int dsize = sizeof(zero);
 	int bsize = (pbm->bi.load_size);
+
+	memset(zero, 0, dsize);
 
 	desc[0].hrdmac = ((0 << 14) |						/* burst length */
 			  (0 <<  9) |						/* ARUSER	*/
@@ -73,8 +75,8 @@ void bimage_generate_hash(struct nx_bootmanager *pbm,
 			  (0 <<  2) |						/* ARPROT	*/
 			  (0 <<  1));						/* byte swap	*/
 	desc[1].hrdmash = 0;							/* start addr high */
-	desc[1].hrdmas = ((unsigned int)rsa_public_key);			/* start addr low  */
-	desc[1].hrdmal = keysize;
+	desc[1].hrdmas = ((unsigned int)zero);					/* start addr low  */
+	desc[1].hrdmal = dsize;
 
 	desc[2].hrdmac = ((0 << 14) |						/* burst length */
 			  (0 <<  9) |						/* ARUSER	*/
@@ -85,7 +87,7 @@ void bimage_generate_hash(struct nx_bootmanager *pbm,
 	desc[2].hrdmal = bsize;
 
 	g_crypto->get_hash(desc, 3, (unsigned int *)phash,
-					(hsize + keysize + bsize));
+					(hsize + dsize + bsize));
 //	NOTICE("Hash Generated!! \r\n");
 
 	return;
@@ -136,8 +138,11 @@ int authenticate_bimage(struct nx_bootmanager *pbm,
 	int ret = 0;
 
 	if (verify_enb) {
+		/* @brief: software reset the sss controller */
+		sssc_reset(TRUE);
+
 		/* @brief: generate the hash data (input: header + original image) */
-		bimage_generate_hash(pbm, rsa_public_key, (unsigned char*)hash);
+		bimage_generate_hash(pbm, (unsigned char*)hash);
 
 		/*
 		 * @brief: perform authentication procedures
