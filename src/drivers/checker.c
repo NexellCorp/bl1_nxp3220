@@ -134,6 +134,10 @@ int authenticate_image(unsigned char *pbootkey,
 int authenticate_bimage(struct nx_bootmanager *pbm,
 	unsigned char *rsa_public_key, unsigned int verify_enb)
 {
+	int index = 0;
+	int reverse_index = 0;
+	unsigned char swap;
+
 	unsigned int hash[32/4];
 	int ret = 0;
 
@@ -143,6 +147,17 @@ int authenticate_bimage(struct nx_bootmanager *pbm,
 
 		/* @brief: generate the hash data (input: header + original image) */
 		bimage_generate_hash(pbm, (unsigned char*)hash);
+
+		/* @brief: change the endian to synchronize with web tool in samsung. */
+		for (index = 0,
+				reverse_index = sizeof(pbm->rsa_encrypted_sha256_hash) - 1;
+				index < sizeof(pbm->rsa_encrypted_sha256_hash) / 2;
+				index++, reverse_index--) {
+			swap = pbm->rsa_encrypted_sha256_hash[reverse_index];
+			pbm->rsa_encrypted_sha256_hash[reverse_index] =
+				pbm->rsa_encrypted_sha256_hash[index];
+			pbm->rsa_encrypted_sha256_hash[index] = swap;
+		}
 
 		/*
 		 * @brief: perform authentication procedures
