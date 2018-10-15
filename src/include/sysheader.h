@@ -27,9 +27,9 @@
 
 #include <bl0_fnptr.h>
 
-#ifdef CHIPID_NXP3220
+#if defined(CHIPID_NXP3220)
 #include <nxp3220.h>
-#include <sip_s31nx_io_mux.h>
+#include <nxp3220_io_mux.h>
 #include <bootoption.h>
 #endif
 
