@@ -15,12 +15,90 @@
 #include <checker.h>
 #include <sss.h>
 
-/* @brief: It is a function to decrypt only the boot image. */
-void aes_cbc_decrypt_bimage(struct nx_bootmanager *pbm, unsigned int iv[])
+struct sss_reg *g_sss_reg =
+	(struct sss_reg *)PHY_BASEADDR_SSS_MODULE_SSS;
+
+struct skm_reg *g_skm_reg =
+	(struct skm_reg *)PHY_BASEADDR_SSS_MODULE_HOST_KEYMAN;
+
+void aes_decrypt(struct nx_brtdmadesc *pdesc,
+	unsigned int count, unsigned  int *iv, unsigned int size)
 {
-	g_mbedtls->aes_cbc_decrypt_bimage((unsigned int*)pbm->bi.load_addr,
-			(unsigned int*)pbm->bi.load_addr, (unsigned int *)iv,
-			pbm->bi.load_size);
+	unsigned int fctrl, i;
+
+	mmio_write_32(&g_sss_reg->aes.control,
+		(AES_DEC | AES_CBC | AES_FIFO | AES_128 | AES_NOSWAP));
+	mmio_write_32(&g_sss_reg->aes.sizelow, size);
+	mmio_write_32(&g_sss_reg->aes.sizehigh, 0);
+
+	mmio_write_32(&g_skm_reg->ctrl, 1);			/* open key manager path */
+	mmio_write_32(&g_skm_reg->mode, 1);			/* 0: aes key 0, 1: aes key 1, 2: iv0, 3: iv1 */
+	mmio_write_32(&g_sss_reg->aes.keydata[4], 0xFFFFFFFF);
+	mmio_write_32(&g_sss_reg->aes.keydata[5], 0xFFFFFFFF);
+	mmio_write_32(&g_sss_reg->aes.keydata[6], 0xFFFFFFFF);
+	mmio_write_32(&g_sss_reg->aes.keydata[7], 0xFFFFFFFF);
+	mmio_write_32(&g_skm_reg->ctrl, 0);			/* close path */
+
+	mmio_write_32(&g_sss_reg->aes.ivdata[0], iv[0]);
+	mmio_write_32(&g_sss_reg->aes.ivdata[1], iv[1]);
+	mmio_write_32(&g_sss_reg->aes.ivdata[2], iv[2]);
+	mmio_write_32(&g_sss_reg->aes.ivdata[3], iv[3]);
+
+	mmio_write_32(&g_sss_reg->feeder.fifoctrl, AESSEL);
+	mmio_write_32(&g_sss_reg->feeder.ddmactrl,
+		(1 <<  3) |			/* cipher table swap	*/
+		(0 <<  1)); 			/* no hash table swap	*/
+	mmio_write_32(&g_sss_reg->feeder.bdrdmash, 0);
+	mmio_write_32(&g_sss_reg->feeder.bdrdmac,
+		(0 << 14) |			/* Burst Length		*/
+		(0 <<  9) |			/* ARUSER		*/
+		(0 <<  5) |			/* ARCACHE		*/
+		(0 <<  2) |			/* ARPROT		*/
+		(0 <<  1));			/* Byte Swap		*/
+
+	mmio_write_32(&g_sss_reg->feeder.bdrdmas, (unsigned int)pdesc);
+	mmio_write_32(&g_sss_reg->feeder.bdrdmal, sizeof(struct nx_brtdmadesc) * count);
+
+	while (!(mmio_read_32(&g_sss_reg->feeder.intpend) & (1 << 16)));	/* check bddma_done	*/
+	mmio_write_32(&g_sss_reg->feeder.intpend, (1 << 16));			/* clear pending	*/
+
+	mmio_write_32(&g_sss_reg->aes.status, AES_MAC_DONE);
+}
+
+/* @brief: It is a function to decrypt only the boot image. */
+void aes_cbc_decrypt_bimage(struct nx_bootmanager *pbm, unsigned int *iv)
+{
+	/* @brief: software reset the sss controller */
+	sssc_reset(TRUE);
+
+	struct nx_brtdmadesc __attribute__ ((aligned(16))) desc;
+	unsigned int size = pbm->bi.load_size;
+
+	g_bl0_fn->lib_fn.sss_swap_dword((unsigned int*)pbm->bi.load_addr,
+				(unsigned int*)pbm->bi.load_addr, size);
+
+	desc.brdmac =
+		(0 << 14) |				/* Burst Length */
+		(0 <<  9) |				/* ARUSER	*/
+		(0 <<  2) |				/* ARPROT	*/
+		(1 <<  1);				/* Byte Swap	*/
+	desc.brdmash = 0;				/* start addr high */
+	desc.brdmas = (unsigned int)pbm->bi.load_addr;/* start addr low  */
+	desc.brdmal = size;
+
+	desc.btdmac =
+		(0 << 14) |				/* Burst Length; */
+		(0 <<  9) |				/* ARUSER	 */
+		(0 <<  2) |				/* ARPROT	 */
+		(1 <<  1);				/* Byte Swap	 */
+	desc.btdmash = 0;
+	desc.btdmas = (unsigned int)pbm->bi.load_addr;
+	desc.btdmal = size;				/* encrypted data */
+
+	aes_decrypt(&desc, 1, iv, size);
+
+	g_bl0_fn->lib_fn.sss_swap_dword((unsigned int*)pbm->bi.load_addr,
+				(unsigned int*)pbm->bi.load_addr, size);
 
 	NOTICE("Image decrypt complete!! \r\n");
 

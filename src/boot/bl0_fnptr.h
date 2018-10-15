@@ -176,12 +176,16 @@ struct nx_lib_fnptr {
 	void *(*memcpy)(void *dest, const void *src, size_t n);
 	void *(*memset)(void *str, int c, size_t n);
 	int (*memcmp)(const void* s1, const void* s2, size_t n);
+
+	void (*block_rev)(unsigned int *dst, unsigned int *src, unsigned int size);
+	void (*sss_swap_byte)(unsigned int *dst, unsigned int *src, unsigned int size);
+	void (*sss_swap_dword)(unsigned int *dst, unsigned int *src, unsigned int size);
 };
 
 struct nx_bl0_fnptr {
 	int reserved0;
 	struct nx_lib_fnptr lib_fn;
-	int reserved1[18];
+	int reserved1[15];
 
 	struct nx_crypto_fntpr crypt_fn;
 	struct nx_verific_fntpr ver_fn;
