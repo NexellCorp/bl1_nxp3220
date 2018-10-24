@@ -32,20 +32,30 @@ static void check_pwrup_blk(int domain, int enable)
 	switch(domain) {
 		case BLOCK_DDR:
 			/* Send the Request - Block DDR */
-			mmio_set_32(&sysreg->pwrdn_reqn, (0x1 << 3) |		/* [3]: ADB400_BLK_DDR_CFG_BUS_0__SYSREG__PWRDNREQN	*/
-							 (0x1 << 5));		/* [5]: ADB400_BLK_DDR_DATA_BUS_0__SYSREG__PWRDNREQN	*/
+			if (enable)
+				mmio_set_32(&sysreg->pwrdn_reqn, (0x1 << 3) |	/* [3]: ADB400_BLK_DDR_CFG_BUS_0__SYSREG__PWRDNREQN	*/
+								 (0x1 << 5));	/* [5]: ADB400_BLK_DDR_DATA_BUS_0__SYSREG__PWRDNREQN	*/
+			else
+				mmio_clear_32(&sysreg->pwrdn_reqn, (0x1 << 3) |	/* [3]: ADB400_BLK_DDR_CFG_BUS_0__SYSREG__PWRDNREQN	*/
+								   (0x1 << 5));	/* [5]: ADB400_BLK_DDR_DATA_BUS_0__SYSREG__PWRDNREQN	*/
 			/* Waiting for ACK - Block DDR */
 			while (ack == ((mmio_read_32(&sysreg->pwrdn_ackn)
 						>> 5) & 0x1));			/* [5]: ADB400_BLK_DDR_CFG_BUS_0__SYSREG__PWRDNACKN	*/
 			while (ack == ((mmio_read_32(&sysreg->pwrdn_ackn)
 						>> 7) & 0x1));			/* [7]: ADB400_BLK_DDR_DATA_BUS_0__SYSREG__PWRDNACKN	*/
+
 			break;
 		case BLOCK_MM:
 			/* Send the Request - Block MM */
-			mmio_set_32(&sysreg->pwrdn_reqn, (0x1 << 1));		/* [1]: ADB400_BLK_MM_CFG_BUS_0__SYSREG__PWRDNREQN	*/
-			mmio_set_32(&sysreg->blk_mm_adb, (0x1 << 1) |		/* [1]: BLK_MM_DATA_ADB_DISP__SYSREG__PWRDNREQN		*/
-							 (0x1 << 0));		/* [0]: BLK_MM_DATA_ADB_M2M__SYSREG__PWRDNREQN		*/
-
+			if (enable) {
+				mmio_set_32(&sysreg->pwrdn_reqn, (0x1 << 1));	/* [1]: ADB400_BLK_MM_CFG_BUS_0__SYSREG__PWRDNREQN	*/
+				mmio_set_32(&sysreg->blk_mm_adb, (0x1 << 1) |	/* [1]: BLK_MM_DATA_ADB_DISP__SYSREG__PWRDNREQN		*/
+								 (0x1 << 0));	/* [0]: BLK_MM_DATA_ADB_M2M__SYSREG__PWRDNREQN		*/
+			} else {
+				mmio_clear_32(&sysreg->pwrdn_reqn, (0x1 << 1));	/* [1]: ADB400_BLK_MM_CFG_BUS_0__SYSREG__PWRDNREQN	*/
+				mmio_clear_32(&sysreg->blk_mm_adb, (0x1 << 1) |	/* [1]: BLK_MM_DATA_ADB_DISP__SYSREG__PWRDNREQN		*/
+								   (0x1 << 0));	/* [0]: BLK_MM_DATA_ADB_M2M__SYSREG__PWRDNREQN		*/
+			}
 			/* Waiting for ACK - Block MM */
 			while (ack == ((mmio_read_32(&sysreg->pwrdn_ackn)
 						>> 3) & 0x1));			/* [3]: ADB400_BLK_MM_CFG_BUS_0__SYSREG__PWRDNACKN	*/
@@ -53,17 +63,23 @@ static void check_pwrup_blk(int domain, int enable)
 						>> 7) & 0x1));			/* [7]: BLK_MM_DATA_ADB_DISP__SYSREG__PWRDNACKN		*/
 			while (ack == ((mmio_read_32(&sysreg->blk_mm_adb)
 						>> 5) & 0x1));			/* [5]: BLK_MM_DATA_ADB_M2M__SYSREG__PWRDNACKN		*/
+
 			break;
 		case BLOCK_USB:
 			/* Send the Request - Block USB */
-			mmio_set_32(&sysreg->pwrdn_reqn,  (0x1 << 2));		/* [2]: ADB400_BLK_USB_CFG_BUS_0__SYSREG__PWRDNREQN	*/
-			mmio_set_32(&sysreg->blk_usb_adb, (0x1 << 0));		/* [0]: BLK_USB_DATA_ADB__SYSREG__PWRDNREQN		*/
-
+			if (enable) {
+				mmio_set_32(&sysreg->pwrdn_reqn,  (0x1 << 2));	/* [2]: ADB400_BLK_USB_CFG_BUS_0__SYSREG__PWRDNREQN	*/
+				mmio_set_32(&sysreg->blk_usb_adb, (0x1 << 0));	/* [0]: BLK_USB_DATA_ADB__SYSREG__PWRDNREQN		*/
+			} else {
+				mmio_clear_32(&sysreg->pwrdn_reqn, (0x1 << 2));	/* [2]: ADB400_BLK_USB_CFG_BUS_0__SYSREG__PWRDNREQN	*/
+				mmio_clear_32(&sysreg->blk_usb_adb,(0x1 << 0));	/* [0]: BLK_USB_DATA_ADB__SYSREG__PWRDNREQN		*/
+			}
 			/* Waiting for ACK - Block USB */
 			while (ack == ((mmio_read_32(&sysreg->pwrdn_ackn)
 						>> 4) & 0x1));			/* [4]: ADB400_BLK_USB_CFG_BUS_0__SYSREG__PWRDNACKN	*/
-			while (ack== ((mmio_read_32(&sysreg->blk_usb_adb)
+			while (ack == ((mmio_read_32(&sysreg->blk_usb_adb)
 						>> 5) & 0x1));			/* [5]: BLK_USB_DATA_ADB__SYSREG__PWRDNACKN		*/
+
 			break;
 	}
 
@@ -94,8 +110,13 @@ static void pmu_blk_reset_n(unsigned int domain, unsigned int enable)
 
 void pmu_blk_pwrup(unsigned int domain, unsigned int enable)
 {
+	if (!enable)
+		check_pwrup_blk(domain, enable);
+
 	pmu_blk_reset_n(domain, enable);
-	check_pwrup_blk(domain, enable);
+
+	if (enable)
+		check_pwrup_blk(domain, enable);
 }
 
 void usb_blk_pwrup(void)
