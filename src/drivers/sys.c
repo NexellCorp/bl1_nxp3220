@@ -72,10 +72,6 @@ void system_initialize(void)
 {
 	struct nx_sysreg_sys_reg *sys_reg
 		= ((struct nx_sysreg_sys_reg *)PHY_BASEADDR_SYSREG_SYS);
-
-	/* @brief: An initialization set to organize the state of the chip. */
-	mmio_write_32(&g_alive_reg->gpio_detect_pend, 0xFFFF);
-
 	/*
 	 * @brief: Change access permission to all bits
 	 * of GPIO A~F to non-secure.
