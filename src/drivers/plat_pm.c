@@ -164,8 +164,8 @@ static void system_vdd_pwroff(void)
 	mmio_clear_32(&g_alive_reg->vddctrl_read, 0x3);
 
 	/* step 06. VDD Off -> Wakeup Start Delay  */
-	mmio_write_32(&g_vddpwr_reg->vddoff_delay_for_wakeup_mask, 0x0000000A);
-	mmio_write_32(&g_vddpwr_reg->vddoff_delay_for_repower_on, 0x0000000A);
+	mmio_write_32(&g_vddpwr_reg->vddoff_delay_for_wakeup_mask, 1000);
+	mmio_write_32(&g_vddpwr_reg->vddoff_delay_for_repower_on, 1000);
 
 	/* step 07. VDDPOWERON Off, start counting down. */
 	mmio_write_32(&g_vddpwr_reg->vddoff_start, (1 << 0));
