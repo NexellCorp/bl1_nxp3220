@@ -1,15 +1,11 @@
 /*
- * Copyright (C) 2018  Nexell Co., Ltd.
- * Author: deoks <truevirtue@nexell.co.kr>
+ * Copyright(C) 2018 Nexell Co., Ltd. All rights reserved.
  *
- * Nexell informs that this code and information is provided "as Is" base
- * and without warranty of any kind, either expressed or implied, including,
- * but not limited to the implied warranties of merchantabulity and/or
- * fitness for a aparticular purpose.
- *
- * This program is copyrighted by Nexell and does not allow modification or
- * distribution. In addition to the author (person in charge), the modifier
- * is responsible for the modification.
+ * Nexell retain all intellectual property and proprietary rights in and
+ * to this software and related documentation. Any use, reproduction,
+ * disclosure, or distribution of this software and related documentation
+ * without an express license agreement from Nexell company is strictly
+ * prohibited.
  */
 #define	SET_GLOBAL_VARIABLES
 
