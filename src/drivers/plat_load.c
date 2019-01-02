@@ -15,6 +15,7 @@
 #include <nandboot.h>
 #include <libnx.h>
 #include <checker.h>
+#include <memory.h>
 #include <tz.h>
 #include <sss.h>
 #include <cmu.h>
@@ -40,6 +41,25 @@ extern struct nx_vddpwr_reg *g_vddpwr_reg;
 static int check_load_addr(unsigned int load_addr)
 {
 	return load_addr;
+}
+
+static int calcurate_s_addr(unsigned int sdram_size)
+{
+	unsigned long address;
+
+	/* @brief: memory size(MB) - 16MB */
+	if (sdram_size == SDRAM_SIZE_256MB)
+		address = 0x4F000000;
+	else if (sdram_size == SDRAM_SIZE_512MB)
+		address = 0x5F000000;
+	else if (sdram_size == SDRAM_SIZE_1024MB)
+		address = 0x7F000000;
+	else if (sdram_size == SDRAM_SIZE_2048MB)
+		address = 0xBF000000;
+	else	/* Convert the unit MB -> Byte.*/
+		address = ((sdram_size * 1024 * 1024)
+				- SECUREOS_ALLOCATE_SIZE);
+	return address;
 }
 
 static int check_platfrom(struct nx_bootmanager *pbm,
@@ -229,7 +249,9 @@ int plat_s_load(struct platform_info *ppi)
 			success = check_platfrom(pbm,
 					&g_rsa_public_key[256], encrypted);
 
-			secure_l = g_ppi->s_launch_addr  = pbm->bi.launch_addr;
+			/* @brief: calcurate the launch_address for secure-os */
+			secure_l = calcurate_s_addr(ppi->sdram_size);
+			g_ppi->s_launch_addr  = secure_l;
 
 			/* @brief: set the tzasc regionX for secure-os */
 			tzasc_set_regionx(TZC_REGION_1,

@@ -7,9 +7,15 @@
  * without an express license agreement from Nexell company is strictly
  * prohibited.
  */
-#ifndef _MEMORY_H__
-#define _MEMORY_H__
+#ifndef __MEMORY_H__
+#define __MEMORY_H__
 
+#define SECUREOS_ALLOCATE_SIZE		0x1000000
 
+/* Define the memory size - Unit: Byte */
+#define SDRAM_SIZE_256MB		0x10000000
+#define SDRAM_SIZE_512MB		0x20000000
+#define SDRAM_SIZE_1024MB		0x40000000
+#define SDRAM_SIZE_2048MB		0x80000000
 
 #endif // #ifndef _MEMORY_H__
