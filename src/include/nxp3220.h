@@ -26,7 +26,7 @@
 
 #define DEV_BLK_SIZE			0x200
 #define BL1_DEVICE_ADDR			(34 * DEV_BLK_SIZE)			/*  */
-#define BL2_DEVICE_ADDR			(BL1_DEVICE_ADDR + (64 * 1024))
+#define BL2_DEVICE_ADDR			(((BL1_DEVICE_ADDR + (64 * 1024)) + 16384 - 1) & 0xffffc000) // 16K align: 0x18000
 #define SSS_DEVICE_ADDR			(BL2_DEVICE_ADDR + (64 * 1024))
 
 /* Fixed the Function Table Address (BL0) */
