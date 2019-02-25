@@ -16,9 +16,6 @@ SYStem.Option EnReset ON
 
 sys.config.corebase 0x80010000 0x80012000
 
-;sys.CONFIG.CTIBASE 0x80020000
-;0x80120000
-
 tronchip.set DABORT off
 tronchip.set PABORT off
 ;tronchip.set RESET off
