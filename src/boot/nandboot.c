@@ -363,7 +363,7 @@ static int nandboot_skip_bad(struct nandbootinfo *pnbi, int block)
 static int nandboot_get_start_block(struct nandbootinfo *pnbi,
 		int my_start_block)
 {
-	int valid_block = 1, req_valid_block = my_start_block, test_block = 1;
+	int valid_block = 0, req_valid_block = my_start_block, test_block = 0;
 
 	do {
 		if (!nand_is_bad(pnbi, test_block++)) {
