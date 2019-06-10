@@ -23,6 +23,7 @@ void printchar(char **str, int c)
 		(void)putc((char)c);
 }
 
+#if 0
 int print(char **out, const char *format, va_list args)
 {
 	return g_bl1_fn->lib_fn.print(out, format, args);
@@ -39,6 +40,7 @@ int printf(const char *format, ...)
 
 	return ret;
 }
+#endif
 
 int empty_printf(const char *format, ...)
 {

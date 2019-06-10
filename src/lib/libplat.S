@@ -48,7 +48,7 @@ ENDPROC(get_cpuid)
 
 ENTRY(secure_launch)
 	mov	r11, r1
-	msr	CPSR_c,  #(MODE_MON|I_BIT)
+	msr	CPSR_c,  #(MODE_MON | A_BIT | I_BIT)
 
 	mov	lr, r2
 	mov	r1, r3
@@ -85,7 +85,7 @@ ENTRY(non_secure_launch)
 	mov	r12, #0
 
 	/* switch to supervisor mode */
-	mov	r0, #(MODE_SVC | I_BIT)
+	mov	r0, #(MODE_SVC | A_BIT | I_BIT)
 	msr	SPSR_cxsf, r0
 	mov	r0, #0
 	movs	pc, lr

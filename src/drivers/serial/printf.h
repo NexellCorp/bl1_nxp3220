@@ -12,6 +12,7 @@
 
 #include <stdarg.h>
 #include <serial.h>
+#include <bl0_fnptr.h>
 
 #define getc		serial_getc
 #define putc		serial_putc
@@ -20,9 +21,11 @@
 #define serial_busy	serial_is_busy
 #define serial_tx_empty	serial_is_tx_empty
 
+#define printf g_bl1_fn->lib_fn.printf
+
 void printchar(char **str, int c);
-int print(char **out, const char *format, va_list args);
-int printf(const char *format, ...);
+//int print(char **out, const char *format, va_list args);
+//int printf(const char *format, ...);
 int empty_printf(const char *format, ...);
 
 #endif /* #ifndef __PRINTF__*/

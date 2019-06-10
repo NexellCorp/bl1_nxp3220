@@ -105,7 +105,7 @@ ENTRY(monitor_mode_init)
 
 	mov     r1, #0x100
 	sub     r2, r12, #1
-	and     r2, r2, #3
+	and     r2, r2, #1
 	mul     r1, r1, r2
 	sub     sp, sp, r1
 
