@@ -169,7 +169,6 @@ int plat_s_load(struct platform_info *ppi)
 	struct nx_bootmanager bm, *pbm;
 	unsigned int is_secure_os, is_sss_f, encrypted;
 	unsigned int option = get_boption();
-	unsigned int device = ((option >> BOOTMODE) & 0x7);
 	unsigned int secure_l = 0;
 
 	unsigned int is_resume = check_suspend_state();
