@@ -39,6 +39,7 @@ extern struct nx_vddpwr_reg *g_vddpwr_reg;
 
 static int check_load_addr(unsigned int load_addr)
 {
+	printf("device addr:%08x\r\n", load_addr);
 	return load_addr;
 }
 
@@ -88,6 +89,7 @@ int plat_next_load(struct nx_bootmanager *pbm, unsigned int option)
 	int device = ((option >> BOOTMODE) & 0x7);
 	int ret = TRUE;
 
+	device = NANDECBOOT;
 	switch (device) {
 		case EMMCBOOT:
 			SYSMSG("Loading from eMMC...\r\n");
@@ -138,7 +140,13 @@ void plat_load(unsigned int is_resume, struct nx_bootmanager *pbm)
 	unsigned int option = get_boption();
 	int success;
 
-	g_nsih->dbi.device_addr = BL2_DEVICE_ADDR;
+	if (option & 7 == NANDECBOOT)
+		pbm->bi.dbi.device_addr = 0x20000;//g_nsih->dbi.device_addr;
+	else {
+		g_nsih->dbi.device_addr = BL2_DEVICE_ADDR;
+		pbm->bi.dbi.device_addr = g_nsih->dbi.device_addr;
+	}
+
 	success = plat_next_load(pbm, option);
 #if 0
 	if (success >= 0)
@@ -153,8 +161,8 @@ void plat_load(unsigned int is_resume, struct nx_bootmanager *pbm)
 		plat_s_launch(is_resume, 0, pbm->bi.launch_addr, 0);
 	}
 
-	ERROR("Platform Load Failed!! (%X) \r\n", success);
-	while(1);
+	ERROR("Platform Load Failed!! (%X) halt!\r\n", success);
+	while (1);
 }
 
 int plat_s_load(struct platform_info *ppi)
@@ -180,12 +188,8 @@ int plat_s_load(struct platform_info *ppi)
 	 * @brief: If it is a block-device, it is unconditionally read.
 	 * It checks the header and returns the result.
 	 */
-	if ((device != USBBOOT) && (device != UARTBOOT)) {
-		is_secure_os = is_sss_f = TRUE;
-	} else {
-		is_secure_os = ((ppi->is_loadmark >> 0) & 0xF);
-		is_sss_f = ((ppi->is_loadmark >> 8) & 0xF);
-	}
+	is_secure_os = ((ppi->is_loadmark >> 0) & 0xF);
+	is_sss_f = ((ppi->is_loadmark >> 8) & 0xF);
 
 	/*
 	 * @brief: After confirming the resume status, perform the necessary
@@ -207,6 +211,7 @@ int plat_s_load(struct platform_info *ppi)
 		if (is_sss_f) {
 			NOTICE("Load the SSS Firmware.. \r\n");
 			g_nsih->dbi.device_addr = check_load_addr(ppi->sf_dev_addr);
+			pbm->bi.dbi.device_addr = g_nsih->dbi.device_addr;
 			success = sss_load(pbm, option);
 			if (success != TRUE)
 				WARN("SSS Firmware Load Failed!! (%d) \r\n", success);
@@ -220,6 +225,7 @@ int plat_s_load(struct platform_info *ppi)
 		if (is_resume != TRUE) {
 			NOTICE("Load the Secure OS... \r\n");
 			g_nsih->dbi.device_addr = check_load_addr(ppi->s_dev_addr);
+			pbm->bi.dbi.device_addr = g_nsih->dbi.device_addr;
 			success = plat_next_load(pbm, option);
 			if (success != TRUE) {
 				WARN("Secure-OS Load Failed!! (%d) \r\n", success);
@@ -240,6 +246,7 @@ int plat_s_load(struct platform_info *ppi)
 	if (is_resume != TRUE) {
 		NOTICE("Load the Non-Secure OS... \r\n");
 		g_nsih->dbi.device_addr = check_load_addr(ppi->n_dev_addr);
+		pbm->bi.dbi.device_addr = g_nsih->dbi.device_addr;
 		success = plat_next_load(pbm, option);
 		if (success != TRUE) {
 			ERROR("Boot Loade 3-3 Load Failed!! (%d) \r\n", success);
