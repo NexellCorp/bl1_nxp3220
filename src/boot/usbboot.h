@@ -387,6 +387,7 @@ typedef struct __attribute__((aligned(sizeof(unsigned char*)))) tag_usbboot_stat
 
 } usbboot_status;
 
+#include <bootheader.h>
 /* Function Define */
  void usb_int_bulkout(usbboot_status *pusbbt_st, struct nx_bootmanager *pbm,
 		 unsigned int fifo_cnt_byte);

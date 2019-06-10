@@ -8,6 +8,7 @@
  * prohibited.
  */
 #include <sysheader.h>
+#include <bootheader.h>
 #include <nand.h>
 #include <nandboot.h>
 
@@ -379,7 +380,7 @@ int nandboot(struct nx_bootmanager *pbm, unsigned int option)
 	struct nandbootinfo *pnbi = &nbi;
 	unsigned int start_block = pbm->bi.dbi.device_addr;
 //	unsigned char __attribute__ ((packed, aligned(32))) nbuf[1024];
-	unsigned char *nbuf = 0xfffff200;
+	unsigned char *nbuf = (unsigned char *)0xfffff200;
 //	unsigned char *nbuf = 0xffff8c00;
 	int ret = FALSE, block_size;
 
@@ -478,8 +479,8 @@ int nandboot(struct nx_bootmanager *pbm, unsigned int option)
 		goto error;
 	}
 
-	void *load_addr = pbm->bi.load_addr;
-	int blockdata = pnbi->pagesize * pnbi->pageperblock /
+	void *load_addr = (void *)pbm->bi.load_addr;
+	unsigned int blockdata = pnbi->pagesize * pnbi->pageperblock /
 		1024 * pnbi->datasize;
 	int load_size;// = pbm->bi.load_size;
 	int loaded_size = sizeof(struct sbi_header) + 256;	// 512 bytes
