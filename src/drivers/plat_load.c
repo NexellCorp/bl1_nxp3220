@@ -89,7 +89,6 @@ int plat_next_load(struct nx_bootmanager *pbm, unsigned int option)
 	int device = ((option >> BOOTMODE) & 0x7);
 	int ret = TRUE;
 
-	device = NANDECBOOT;
 	switch (device) {
 		case EMMCBOOT:
 			SYSMSG("Loading from eMMC...\r\n");
@@ -140,7 +139,7 @@ void plat_load(unsigned int is_resume, struct nx_bootmanager *pbm)
 	unsigned int option = get_boption();
 	int success;
 
-	if (option & 7 == NANDECBOOT)
+	if ((option & 7) == NANDECBOOT)
 		pbm->bi.dbi.device_addr = 0x20000;//g_nsih->dbi.device_addr;
 	else {
 		g_nsih->dbi.device_addr = BL2_DEVICE_ADDR;
