@@ -15,6 +15,7 @@ struct nandbootinfo {
 	unsigned int zeroimage_page;	// zero base nand offset
 	unsigned int copyimage_page;	// if nand data cannot error correction
 	unsigned int sector_ptr;	// error correct sector ptr
+	unsigned int imageoffset;	// if correction fail, next try nand addr
 	unsigned short pagesize;	// nand page size
 	unsigned short sectorsize;	// 512 or 1024
 	unsigned short datasize;	// unit byte (sectorsize - eccsize)
@@ -27,6 +28,7 @@ struct nandbootinfo {
 	char nextretry;			// if none correctable error
 	unsigned char imageblockcnt;
 	unsigned char checkimagecnt;
+	unsigned int pageperblock;
 };
 
 /* Function Define */

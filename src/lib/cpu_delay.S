@@ -9,10 +9,12 @@
  */
 #include "../include/asm.h"
 
+#if 0
 ENTRY(set_delay_cnt)
 	mcr	p15, 0, r0, c13, c0, 2
 	bx	lr
 ENDPROC(set_delay_cnt)
+#endif
 
 ENTRY(cpu_udelay)
 //	mrc	p15, 0, r1, c13, c0, 2
