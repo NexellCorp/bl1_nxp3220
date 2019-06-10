@@ -20,8 +20,6 @@ struct skm_reg *g_skm_reg =
 void aes_decrypt(struct nx_brtdmadesc *pdesc,
 	unsigned int count, unsigned  int *iv, unsigned int size)
 {
-	unsigned int fctrl, i;
-
 	mmio_write_32(&g_sss_reg->aes.control,
 		(AES_DEC | AES_CBC | AES_FIFO | AES_128 | AES_NOSWAP));
 	mmio_write_32(&g_sss_reg->aes.sizelow, size);
@@ -208,7 +206,7 @@ int authenticate_image(unsigned char *pbootkey,
 int authenticate_bimage(struct nx_bootmanager *pbm,
 	unsigned char *rsa_public_key, unsigned int verify_enb)
 {
-	int index = 0;
+	unsigned int index = 0;
 	int reverse_index = 0;
 	unsigned char swap;
 
