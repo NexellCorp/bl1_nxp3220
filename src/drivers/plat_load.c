@@ -89,7 +89,6 @@ int plat_next_load(struct nx_bootmanager *pbm, unsigned int option)
 	int device = ((option >> BOOTMODE) & 0x7);
 	int ret = TRUE;
 
-	device = NANDECBOOT;
 	switch (device) {
 		case EMMCBOOT:
 			SYSMSG("Loading from eMMC...\r\n");

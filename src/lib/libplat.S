@@ -48,7 +48,7 @@ ENDPROC(get_cpuid)
 
 ENTRY(secure_launch)
 	mov	r11, r1
-	msr	CPSR_c,  #(MODE_MON | A_BIT | I_BIT)
+	msr	CPSR_c,  #(MODE_MON | I_BIT)
 
 	mov	lr, r2
 	mov	r1, r3
