@@ -26,10 +26,12 @@ unsigned int gicc_get_iar(void *base)
 /*******************************************************************************
  * cpu-interface s/w interface accessors for writing entire registers
  ******************************************************************************/
+#if 0
 void gicc_set_ctrl(void *base, int val)
 {
 	mmio_set_32((base + GIC_CPUIF_CTRL), val);
 }
+#endif
 
 void gicc_set_eoir(void *base, int val)
 {
@@ -49,6 +51,7 @@ unsigned int gicd_get_baseaddr(void)
 /*******************************************************************************
  * Distributor interface accessors for writing entire registers
  ******************************************************************************/
+#if 0
 void gicd_set_enable(void *base, int val)
 {
 	mmio_set_32((base + GIC_DIST_SENABLE), val);
@@ -63,6 +66,7 @@ void gicd_set_sgir(void *base, int val)
 {
 	mmio_write_32((base + GIC_DIST_SGIR), val);
 }
+#endif
 
 /*******************************************************************************
  * Setup the ARM GIC CPU and Distributor interfaces.

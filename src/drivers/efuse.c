@@ -12,7 +12,7 @@
 
 static struct nx_efuse_reg  *g_efuse_reg
 	= ((struct nx_efuse_reg *)PHY_BASEADDR_ECID_SECURE_MODULE);
-
+#if 0
 static const char gst36StrTable[36] =
 {
 	'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
@@ -89,7 +89,7 @@ int efuse_get_bootcfg(void)
 {
 	return mmio_read_32(&g_efuse_reg->boot_cfg);
 }
-
+#endif
 int efuse_get_ecid(int index)
 {
 	return mmio_read_32(&g_efuse_reg->ecid[index]);
