@@ -39,7 +39,6 @@ extern struct nx_vddpwr_reg *g_vddpwr_reg;
 
 static int check_load_addr(unsigned int load_addr)
 {
-	printf("device addr:%08x\r\n", load_addr);
 	return load_addr;
 }
 
@@ -90,45 +89,44 @@ int plat_next_load(struct nx_bootmanager *pbm, unsigned int option)
 	int ret = TRUE;
 
 	switch (device) {
-		case EMMCBOOT:
-			SYSMSG("Loading from eMMC...\r\n");
-			ret = emmcboot(pbm, option);
-			break;
+	case EMMCBOOT:
+		SYSMSG("Loading from eMMC...\r\n");
+		ret = emmcboot(pbm, option);
+		break;
 
-		case USBBOOT:
-			SYSMSG("Loading from USB...\r\n");
-			ret = usbboot(pbm);
-			break;
+	case USBBOOT:
+		SYSMSG("Loading from USB...\r\n");
+		ret = usbboot(pbm);
+		break;
 #if 0		/* todo */
-		case SDFSBOOT:
-			SYSMSG("Loading from SDFS...\r\n");
-			ret = sdxcfsboot(ptbi. option);
-			break;
+	case SDFSBOOT:
+		SYSMSG("Loading from SDFS...\r\n");
+		ret = sdxcfsboot(ptbi. option);
+		break;
 #endif
-		case SDBOOT:
-			SYSMSG("Loading from SD...\r\n");
-			ret = sdxcboot(pbm, option);
-			break;
+	case SDBOOT:
+		SYSMSG("Loading from SD...\r\n");
+		ret = sdxcboot(pbm, option);
+		break;
 
-		case NANDECBOOT:
-			SYSMSG("Loading from NAND...\n");
-			ret = nandboot(pbm, option);
-			break;
+	case NANDECBOOT:
+		SYSMSG("Loading from NAND...\n");
+		ret = nandboot(pbm, option);
+		break;
 
-		case SPIBOOT:
-			SYSMSG("Loading from SPI...\r\n");
-			ret = spiboot(pbm, option);
-			break;
+	case SPIBOOT:
+		SYSMSG("Loading from SPI...\r\n");
+		ret = spiboot(pbm, option);
+		break;
 
-		case UARTBOOT:
-			SYSMSG("Loading from UART...\r\n");
-			ret = uartboot(pbm, option);
-			break;
+	case UARTBOOT:
+		SYSMSG("Loading from UART...\r\n");
+		ret = uartboot(pbm, option);
+		break;
 
-		default:
-			SYSMSG("Not Support Boot Mode!!! (%X) \r\n", device);
-			break;
-
+	default:
+		SYSMSG("Not Support Boot Mode!!! (%X) \r\n", device);
+		break;
 	}
 
 	return ret;
@@ -139,9 +137,11 @@ void plat_load(unsigned int is_resume, struct nx_bootmanager *pbm)
 	unsigned int option = get_boption();
 	int success;
 
-	if ((option & 7) == NANDECBOOT)
-		pbm->bi.dbi.device_addr = 0x20000;//g_nsih->dbi.device_addr;
-	else {
+	if ((option & 7) == NANDECBOOT) {
+		int pagesize = 2048 << ((option >> 5) & 3);
+		int blocksize = pagesize * ((pagesize == 2048) ? 64 : 128);
+		pbm->bi.dbi.device_addr = blocksize * 1;
+	} else {
 		g_nsih->dbi.device_addr = BL2_DEVICE_ADDR;
 		pbm->bi.dbi.device_addr = g_nsih->dbi.device_addr;
 	}
