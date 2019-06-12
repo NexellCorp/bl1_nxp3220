@@ -380,7 +380,7 @@ int nandboot(struct nx_bootmanager *pbm, unsigned int option)
 	struct nandbootinfo *pnbi = &nbi;
 	unsigned int start_block = pbm->bi.dbi.device_addr;
 //	unsigned char __attribute__ ((packed, aligned(32))) nbuf[1024];
-	unsigned char *nbuf = (unsigned char *)0xfffff200;
+	unsigned char *nbuf = (unsigned char *)0xfffffc00;
 //	unsigned char *nbuf = 0xffff8c00;
 	int ret = FALSE, block_size;
 
