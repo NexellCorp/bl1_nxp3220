@@ -498,9 +498,10 @@ int nandboot(struct nx_bootmanager *pbm, unsigned int option)
 		printf("nand block load size:%d(%d)\r\n",
 				load_size, pbm->bi.load_size);
 		/* step 04. read the boot-image */
-		set_boption(get_boption() | (1 << 23));	// debug message off
+		int option = get_boption();
+		set_boption(option | (1 << 23));	// debug message off
 		ret = g_nand_fn->nand_read(pnbi, load_addr, load_size);
-		set_boption(get_boption() & ~(1 << 23));	// debug message on
+		set_boption(option);	// option restore
 		if (ret == FALSE) {
 			ERROR("Nand boot boot-image read failure!! \r\n");
 			goto error;
