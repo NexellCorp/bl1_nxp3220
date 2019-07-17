@@ -1,22 +1,24 @@
 include config.mak
 
-LDFLAGS		=	-Bstatic							\
-			-Wl,-Map=$(DIR_TARGETOUTPUT)/$(TARGET_NAME).map,--cref		\
-			-T$(LDS_NAME).lds						\
-			-Wl,--start-group						\
-			-Lsrc/$(DIR_OBJOUTPUT)						\
-			-Wl,--end-group							\
-			-Wl,--build-id=none						\
-			-lgcc								\
+LDFLAGS		=	-Bstatic						\
+			-Wl,-Map=$(DIR_TARGETOUTPUT)/$(TARGET_NAME).map,--cref	\
+			-T$(LDS_NAME).lds					\
+			-Wl,--start-group					\
+			-Lsrc/$(DIR_OBJOUTPUT)					\
+			-Wl,--end-group						\
+			-Wl,--build-id=none					\
+			-lgcc							\
 			-nostdlib
 
-SYS_OBJS	+=	startup.o libnx.o libarmv7.o armv7_pmu.o delay.o cpu_delay.o pll.o cmu.o printf.o pmu.o		\
-			serial.o plat_pm.o gic.o gpio.o efuse.o checker.o libplat.o plat_load.o tz.o cpupmu.o subcpu.o  \
-			secure_rw.o sss.o sys.o build_info.o main.o
+SYS_OBJS	+=	startup.o libnx.o libarmv7.o armv7_pmu.o delay.o	\
+			cpu_delay.o pll.o cmu.o printf.o pmu.o serial.o		\
+			plat_pm.o gic.o gpio.o efuse.o checker.o libplat.o	\
+			plat_load.o tz.o cpupmu.o subcpu.o secure_rw.o		\
+			sss.o sys.o build_info.o main.o
 
 # Dispatcher (SMC Call)
-SYS_OBJS	+=	smc_entry.o smc_handler.o sip_main.o std_svc_setup.o			\
-			arm_topology.o psci_system_off.o psci_off.o psci_on.o 			\
+SYS_OBJS	+=	smc_entry.o smc_handler.o sip_main.o std_svc_setup.o	\
+			arm_topology.o psci_system_off.o psci_off.o psci_on.o 	\
 			psci_suspend.o psci_common.o psci_main.o
 
 ifeq ($(SUPPORT_USB_BOOT),y)
@@ -51,71 +53,73 @@ SYS_INCLUDES	+=	-I src/						\
 			-I src/services/std_svc/			\
 			-I src/services/std_svc/psci
 
-###################################################################################################
+################################################################################
 $(DIR_OBJOUTPUT)/%.o: src/%.c
 	@echo [compile....$<]
 	$(Q)$(CC) -MMD $< -c -o $@ $(CFLAGS) $(SYS_INCLUDES)
-###################################################################################################
+################################################################################
 $(DIR_OBJOUTPUT)/%.o: src/%.S
 	@echo [compile....$<]
 	$(Q)$(CC) -MMD $< -c -o $@ $(ASFLAG) $(CFLAGS) $(SYS_INCLUDES)
-###################################################################################################
+################################################################################
 
-###################################################################################################
+################################################################################
 $(DIR_OBJOUTPUT)/%.o: src/lib/%.c
 	@echo [compile....$<]
 	$(Q)$(CC) -MMD $< -c -o $@ $(CFLAGS) $(SYS_INCLUDES)
-###################################################################################################
+################################################################################
 $(DIR_OBJOUTPUT)/%.o: src/lib/%.S
 	@echo [compile....$<]
 	$(Q)$(CC) -MMD $< -c -o $@ $(ASFLAG) $(CFLAGS) $(SYS_INCLUDES)
-###################################################################################################
+################################################################################
 $(DIR_OBJOUTPUT)/%.o: src/drivers/%.c
 	@echo [compile....$<]
 	$(Q)$(CC) -MMD $< -c -o $@ $(CFLAGS) $(SYS_INCLUDES)
-##################################################################################################
+################################################################################
 $(DIR_OBJOUTPUT)/%.o: src/drivers/clock/%.c
 	@echo [compile....$<]
 	$(Q)$(CC) -MMD $< -c -o $@ $(CFLAGS) $(SYS_INCLUDES)
-##################################################################################################
+################################################################################
 $(DIR_OBJOUTPUT)/%.o: src/drivers/serial/%.c
 	@echo [compile....$<]
 	$(Q)$(CC) -MMD $< -c -o $@ $(CFLAGS) $(SYS_INCLUDES)
-##################################################################################################
+################################################################################
 
-##################################################################################################
+################################################################################
 $(DIR_OBJOUTPUT)/%.o: src/boot/%.c
 	@echo [compile....$<]
 	$(Q)$(CC) -MMD $< -c -o $@ $(CFLAGS) $(SYS_INCLUDES)
-##################################################################################################
+################################################################################
 
-##################################################################################################
+################################################################################
 $(DIR_OBJOUTPUT)/%.o: src/services/%.S
 	@echo [compile....$<]
 	$(Q)$(CC) -MMD $< -c -o $@ $(ASFLAG) $(CFLAGS) $(SYS_INCLUDES)
-##################################################################################################
+################################################################################
 $(DIR_OBJOUTPUT)/%.o: src/services/%.c
 	@echo [compile....$<]
 	$(Q)$(CC) -MMD $< -c -o $@ $(CFLAGS) $(SYS_INCLUDES)
-##################################################################################################
+################################################################################
 $(DIR_OBJOUTPUT)/%.o: src/services/std_svc/%.c
 	@echo [compile....$<]
 	$(Q)$(CC) -MMD $< -c -o $@ $(CFLAGS) $(SYS_INCLUDES)
-##################################################################################################
+################################################################################
 $(DIR_OBJOUTPUT)/%.o: src/services/std_svc/psci/%.c
 	@echo [compile....$<]
 	$(Q)$(CC) -MMD $< -c -o $@ $(CFLAGS) $(SYS_INCLUDES)
-##################################################################################################
+################################################################################
 
 all: mkobjdir $(SYS_OBJS_LIST) link bin
 
 link:
 	@echo [link.... $(DIR_TARGETOUTPUT)/$(TARGET_NAME).elf]
-	$(Q)$(CC) $(SYS_OBJS_LIST) $(LDFLAGS) -o $(DIR_TARGETOUTPUT)/$(TARGET_NAME).elf
+	$(Q)$(CC) $(SYS_OBJS_LIST) $(LDFLAGS)				\
+		-o $(DIR_TARGETOUTPUT)/$(TARGET_NAME).elf
 
 bin:
 	@echo [binary.... $(DIR_TARGETOUTPUT)/$(TARGET_NAME).bin]
-	$(Q)$(MAKEBIN) -O binary $(DIR_TARGETOUTPUT)/$(TARGET_NAME).elf $(DIR_TARGETOUTPUT)/$(TARGET_NAME).bin
+	$(Q)$(MAKEBIN) -O binary $(DIR_TARGETOUTPUT)/$(TARGET_NAME).elf	\
+		$(DIR_TARGETOUTPUT)/$(TARGET_NAME).bin
 
 mkobjdir:
 ifeq ($(OS),Windows_NT)
