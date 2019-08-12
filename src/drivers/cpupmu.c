@@ -343,6 +343,45 @@ static unsigned int cluster_down_sequence (unsigned short* dst, unsigned int ind
 	return index;
 }
 
+int mc_pmu_set_ema(int ema)
+{
+	int idx = 0;
+
+	if (!(ema == 1 || ema == 3 || ema == 4))
+		return 0;
+
+	mc_pmu_pc_set_to_safe();
+
+	mc_pmu_set_opr(PMU_CMD_REG_EMA, PMU_OP_2, ema & 0x7);
+
+	unsigned short dst[8];
+	dst[idx++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_PWRDNREQN, PMU_OP_0, 16);
+	dst[idx++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_WAIT_PWRDNACKN, PMU_OP_0, 16);
+	dst[idx++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLKOFF, PMU_OP_ALL_1, 3);
+	dst[idx++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_EMA, PMU_OP_2, 3);
+	dst[idx++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLKOFF, PMU_OP_ALL_0, 1);
+	dst[idx++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_PWRDNREQN, PMU_OP_1, 16);
+	dst[idx++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_END, PMU_OP_ALL_0, 2);
+
+	while (mc_pmu_is_busy());
+
+	mc_pmu_download_program(dst);
+	mc_pmu_set_pc(0);
+
+	dmb();
+
+	do {
+		register unsigned int delay = 0x100000;
+		do {
+			__asm__ __volatile__ ("");	// for unroll loop
+		} while (--delay);
+	} while (mc_pmu_is_busy());
+
+	while (mc_pmu_is_busy());
+
+	return 1;
+}
+
 void cpupmu_initialize(void)
 {
 	mc_pmu_pc_set_to_safe();
