@@ -93,14 +93,14 @@ void gic_initialize(unsigned int cpu_id)
 
 	for (index = 0; index < (0x40/4); index++) {
 #if 0
-		mmio_write_32(&dbase->cenabler[index], 0xFFFFFFFF);		/* 0x220C1180 ~ 0x220C11FF */
-		mmio_write_32(&dbase->cpendr[index], 0xFFFFFFFF);		/* 0x220C1280 ~ 0x220C12FF */
+		mmio_write_32(&dbase->cenabler[index], 0xFFFFFFFF);
+		mmio_write_32(&dbase->cpendr[index], 0xFFFFFFFF);
 #endif
 		/*
 		 * GIC set the path that is connected to the
 		 * internal IP interrupts, generated. (0: Secure, 1: Non-Secure)
 		 */
-		mmio_write_32(&dbase->group[index], 0xFFFFFFFF);		/* 0x220C1080 ~ 0x220C10FF */
+		mmio_write_32(&dbase->group[index], 0xFFFFFFFF);
 	}
 
 	mmio_write_32(&dbase->ctlr, 0x0);
@@ -108,7 +108,8 @@ void gic_initialize(unsigned int cpu_id)
 	for (index = 0; index < (0x200/4); index++)
 		mmio_write_32(&dbase->priorityr[index], 0x80808080);
 
-	mmio_write_32(&dbase->icfgr[9], 0xF5555555);				/* 0xC24 */
+	// because irq x line is inactive high. so need change to edge-trigger mode
+	mmio_write_32(&dbase->icfgr[9], 0xF5555555);
 
 	/*
 	 * Whether or not to activate the interrupt
