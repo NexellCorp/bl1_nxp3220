@@ -73,5 +73,6 @@ struct nx_cpupmu_reg {
 void cpupmu_initialize(void);
 void cpu_on_sequence(unsigned int cpu_id);
 void cpu_off_sequence(unsigned int cpu_id);
+int mc_pmu_set_ema(int ema);
 
 #endif
