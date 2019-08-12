@@ -12,7 +12,7 @@
 
 #define BUFFER_LENGTH 			((64 + 16) * 2)
 
-unsigned short PMU_PROGRAM_BUFFER[BUFFER_LENGTH] = { 0, };
+unsigned short PMU_PROGRAM_BUFFER[BUFFER_LENGTH] = {0, };
 unsigned int cpu_pwr_up, cluster_pwr_up;
 unsigned int cpu_pwr_dn, cluster_pwr_dn;
 
@@ -34,17 +34,11 @@ static inline void cpu_wfi(void)
 
 static int mc_pmu_is_busy(void)
 {
-	unsigned int reg_val;
-
-	reg_val = (mmio_read_32(&g_cpupmu_reg->pc_cur) & 0x1);
-
-	if (reg_val)
-		return FALSE;
-
-	return TRUE;
+	return !(mmio_read_32(&g_cpupmu_reg->pc_cur) & 0x1);
 }
 
-static void mc_pmu_set_opr(cpu_pmu_instruction cmd, cpu_pmu_op op, unsigned int value)
+static void mc_pmu_set_opr(cpu_pmu_instruction cmd,
+		cpu_pmu_op op, unsigned int value)
 {
 	unsigned int opsel = ((((unsigned int)op) - 2) * 4);
 
@@ -63,7 +57,7 @@ static void mc_pmu_set_opr(cpu_pmu_instruction cmd, cpu_pmu_op op, unsigned int 
 static void mc_pmu_set_mask_op(cpu_pmu_instruction cmd, unsigned int mask)
 {
 	unsigned int cmd_num = (((unsigned int)cmd) >> 3);
-	unsigned int cmd_sel = (((unsigned int)cmd) & 0x7)*4;
+	unsigned int cmd_sel = (((unsigned int)cmd) & 0x7) * 4;
 
 	unsigned int mask_op   = 0xf << cmd_sel;
 	unsigned int reg_val, masked_regval;
@@ -93,21 +87,22 @@ static void mc_pmu_pc_set_to_safe(void)
 
 	inst = ((inst & (0xffff)) | (unsigned int)(safe_inst << 16));
 
-	while(mc_pmu_is_busy());
+	while (mc_pmu_is_busy());
 
 	mmio_write_32(&g_cpupmu_reg->program[(MC_PMU_PROGRAM_REGION / 2) - 1], inst);
-	mmio_write_32(&g_cpupmu_reg->pc_move, (MC_PMU_PROGRAM_REGION * 2 ) - 1);
+	mmio_write_32(&g_cpupmu_reg->pc_move, (MC_PMU_PROGRAM_REGION * 2) - 1);
 }
 
-static void mc_pmu_download_program(unsigned short *src)
+static void mc_pmu_download_program(unsigned short *src, int size)
 {
-	unsigned int code_l = 0, code_m, code;
-	unsigned int i;
+	int i;
+	size = (size + 1) & 0xfffffffe;	// always even value
 
-	for (i = 0; i < (MC_PMU_PROGRAM_REGION - 2); i++) {
+	for (i = 0; i < size; i++) {
+		unsigned int code_l = 0, code_m, code;
 		code = 0;
-		if (!(i & 0x1)) {
-			code_l = (unsigned int) src[i];
+		if ((i & 0x1) == 0) {
+			code_l = src[i];
 		} else {
 			code_m = src[i];
 			code = (code_l | (code_m << 16));
@@ -116,7 +111,7 @@ static void mc_pmu_download_program(unsigned short *src)
 	}
 }
 
-static void  mc_pmu_set_pc(unsigned short pc)
+static void  mc_pmu_set_pc(unsigned int pc)
 {
 	mmio_write_32(&g_cpupmu_reg->pc_move, pc);
 }
@@ -125,27 +120,27 @@ static void  mc_pmu_set_pc(unsigned short pc)
 static void indiv_cpu_pwr_up_op_set (unsigned int cpu_field, cpu_pmu_op op)
 {
 	/* CPUPWRDOWN, RESET, CLAMP */
-	unsigned int active_low_value = (~(cpu_field) & 0xf);
+	unsigned int active_low_value = ((~cpu_field) & 0xf);
 //	unsigned int active_low_mask = cpu_field;
 	unsigned int active_high_value = cpu_field;
-	unsigned int active_high_mask = (~(cpu_field) & 0xf);
+	unsigned int active_high_mask = ((~cpu_field) & 0xf);
 	unsigned int op_mask = active_high_mask;
 
 	mc_pmu_set_opr(PMU_CMD_REG_CPUPWRDOWNPRE, op, active_low_value);
 	mc_pmu_set_opr(PMU_CMD_REG_CPUPWRDOWNALL, op, active_low_value);
-	mc_pmu_set_opr(PMU_CMD_REG_nCOREPORESET , op, active_high_value);
-	mc_pmu_set_opr(PMU_CMD_REG_nCORERESET   , op, active_high_value);
-	mc_pmu_set_opr(PMU_CMD_REG_nDBGRESET    , op, active_high_value);
-	mc_pmu_set_opr(PMU_CMD_REG_nETMRESET    , op, active_high_value);
-	mc_pmu_set_opr(PMU_CMD_REG_CLAMPCPUOUT  , op, active_low_value);
+	mc_pmu_set_opr(PMU_CMD_REG_nCOREPORESET, op, active_high_value);
+	mc_pmu_set_opr(PMU_CMD_REG_nCORERESET, op, active_high_value);
+	mc_pmu_set_opr(PMU_CMD_REG_nDBGRESET, op, active_high_value);
+	mc_pmu_set_opr(PMU_CMD_REG_nETMRESET, op, active_high_value);
+	mc_pmu_set_opr(PMU_CMD_REG_CLAMPCPUOUT, op, active_low_value);
 
 	mc_pmu_set_mask_op(PMU_CMD_REG_CPUPWRDOWNPRE, op_mask);
 	mc_pmu_set_mask_op(PMU_CMD_REG_CPUPWRDOWNALL, op_mask);
-	mc_pmu_set_mask_op(PMU_CMD_REG_nCOREPORESET , op_mask);
-	mc_pmu_set_mask_op(PMU_CMD_REG_nCORERESET   , op_mask);
-	mc_pmu_set_mask_op(PMU_CMD_REG_nDBGRESET    , op_mask);
-	mc_pmu_set_mask_op(PMU_CMD_REG_nETMRESET    , op_mask);
-	mc_pmu_set_mask_op(PMU_CMD_REG_CLAMPCPUOUT  , op_mask);
+	mc_pmu_set_mask_op(PMU_CMD_REG_nCOREPORESET, op_mask);
+	mc_pmu_set_mask_op(PMU_CMD_REG_nCORERESET, op_mask);
+	mc_pmu_set_mask_op(PMU_CMD_REG_nDBGRESET, op_mask);
+	mc_pmu_set_mask_op(PMU_CMD_REG_nETMRESET, op_mask);
+	mc_pmu_set_mask_op(PMU_CMD_REG_CLAMPCPUOUT, op_mask);
 }
 
 static void indiv_cpu_pwr_down_op_set (unsigned int cpu_field, cpu_pmu_op op)
@@ -157,72 +152,93 @@ static void indiv_cpu_pwr_down_op_set (unsigned int cpu_field, cpu_pmu_op op)
 	unsigned int active_high_mask = (~(cpu_field) & 0xf);
 	unsigned int op_mask = active_high_mask;
 
-	mc_pmu_set_opr(PMU_CMD_WAIT_STANDBYWFI  , op, active_high_value);
-	mc_pmu_set_opr(PMU_CMD_REG_CLAMPCPUOUT  , op, active_high_value);
+	mc_pmu_set_opr(PMU_CMD_WAIT_STANDBYWFI, op, active_high_value);
+	mc_pmu_set_opr(PMU_CMD_REG_CLAMPCPUOUT, op, active_high_value);
 	mc_pmu_set_opr(PMU_CMD_REG_CPUPWRDOWNPRE, op, active_high_value);
 	mc_pmu_set_opr(PMU_CMD_REG_CPUPWRDOWNALL, op, active_high_value);
-	mc_pmu_set_opr(PMU_CMD_REG_nCOREPORESET , op, active_low_value);
-	mc_pmu_set_opr(PMU_CMD_REG_nCORERESET   , op, active_low_value);
-	mc_pmu_set_opr(PMU_CMD_REG_nDBGRESET    , op, active_low_value);
-	mc_pmu_set_opr(PMU_CMD_REG_nETMRESET    , op, active_low_value);
+	mc_pmu_set_opr(PMU_CMD_REG_nCOREPORESET, op, active_low_value);
+	mc_pmu_set_opr(PMU_CMD_REG_nCORERESET, op, active_low_value);
+	mc_pmu_set_opr(PMU_CMD_REG_nDBGRESET, op, active_low_value);
+	mc_pmu_set_opr(PMU_CMD_REG_nETMRESET, op, active_low_value);
 
-	mc_pmu_set_mask_op(PMU_CMD_WAIT_STANDBYWFI  , op_mask);
-	mc_pmu_set_mask_op(PMU_CMD_REG_CLAMPCPUOUT  , op_mask);
+	mc_pmu_set_mask_op(PMU_CMD_WAIT_STANDBYWFI, op_mask);
+	mc_pmu_set_mask_op(PMU_CMD_REG_CLAMPCPUOUT, op_mask);
 	mc_pmu_set_mask_op(PMU_CMD_REG_CPUPWRDOWNPRE, op_mask);
 	mc_pmu_set_mask_op(PMU_CMD_REG_CPUPWRDOWNALL, op_mask);
-	mc_pmu_set_mask_op(PMU_CMD_REG_nCOREPORESET , op_mask);
-	mc_pmu_set_mask_op(PMU_CMD_REG_nCORERESET   , op_mask);
-	mc_pmu_set_mask_op(PMU_CMD_REG_nDBGRESET    , op_mask);
-	mc_pmu_set_mask_op(PMU_CMD_REG_nETMRESET    , op_mask);
+	mc_pmu_set_mask_op(PMU_CMD_REG_nCOREPORESET, op_mask);
+	mc_pmu_set_mask_op(PMU_CMD_REG_nCORERESET, op_mask);
+	mc_pmu_set_mask_op(PMU_CMD_REG_nDBGRESET, op_mask);
+	mc_pmu_set_mask_op(PMU_CMD_REG_nETMRESET, op_mask);
 }
 
 // POWER ON: op 2
-static unsigned int cpu_power_up_sequence (unsigned short *dst, unsigned int index)
+static unsigned int cpu_power_up_sequence (unsigned short *dst, unsigned int index, int end)
 {
 	/* step xx. signal powerdup set to 1 */
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_PWRDUP       , PMU_OP_ALL_1, 8);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLKOFF       , PMU_OP_ALL_0, 8);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_PWRDUP, PMU_OP_ALL_1, 8);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLKOFF, PMU_OP_ALL_0, 8);
 
 	/* step xx. pre charge, all charge */
 	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CPUPWRDOWNPRE, PMU_OP_2, 100);
 	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CPUPWRDOWNALL, PMU_OP_2, 255);
 
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_NOP              , PMU_OP_2, 32);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_PWRDNREQN    , PMU_OP_ALL_0, 16);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_WAIT_PWRDNACKN   , PMU_OP_ALL_0, 16);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLKOFF       , PMU_OP_ALL_1, 16);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_NOP, PMU_OP_2, 32);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_PWRDNREQN, PMU_OP_ALL_0, 16);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_WAIT_PWRDNACKN, PMU_OP_ALL_0, 16);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLKOFF, PMU_OP_ALL_1, 16);
+//	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_EMA, PMU_OP_ALL_1, 16);
 
 	/* step xx. release the reset */
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nCORERESET   , PMU_OP_2, 1);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nCOREPORESET , PMU_OP_2, 1);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nDBGRESET    , PMU_OP_2, 1);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nETMRESET    , PMU_OP_2, 1);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nCORERESET, PMU_OP_2, 1);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nCOREPORESET, PMU_OP_2, 1);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nDBGRESET, PMU_OP_2, 1);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nETMRESET, PMU_OP_2, 1);
 
 	/* step xx. clamp release */
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLAMPCPUOUT  , PMU_OP_2, 8);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLAMPCPUOUT, PMU_OP_2, 8);
 
 	/* step xx. clock on */
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLKOFF       , PMU_OP_ALL_0, 16);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_PWRDNREQN    , PMU_OP_ALL_1, 16);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_END              , PMU_OP_ALL_0, 2);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLKOFF, PMU_OP_ALL_0, 16);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_PWRDNREQN, PMU_OP_ALL_1, 16);
+	if (end)
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_END, PMU_OP_ALL_0, 2);
 #if 0	// Debug
-	DBGOUT("PMU_CMD_REG_PWRDUP        : %x\r\n", MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_PWRDUP        , PMU_OP_ALL_1, 8) );
-	DBGOUT("PMU_CMD_REG_CLKOFF        : %x\r\n", MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLKOFF        , PMU_OP_ALL_0, 8) );
-	DBGOUT("PMU_CMD_REG_CPUPWRDOWNPRE : %x\r\n", MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CPUPWRDOWNPRE , PMU_OP_2, 100)   );
-	DBGOUT("PMU_CMD_REG_CPUPWRDOWNALL : %x\r\n", MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CPUPWRDOWNALL , PMU_OP_2, 255)   );
-	DBGOUT("PMU_CMD_NOP               : %x\r\n", MC_PMU_SET_INSTRUCTION(PMU_CMD_NOP               , PMU_OP_2, 32)    );
-	DBGOUT("PMU_CMD_REG_PWRDNREQN     : %x\r\n", MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_PWRDNREQN     , PMU_OP_ALL_0, 16));
-	DBGOUT("PMU_CMD_WAIT_PWRDNACKN    : %x\r\n", MC_PMU_SET_INSTRUCTION(PMU_CMD_WAIT_PWRDNACKN    , PMU_OP_ALL_0, 16));
-	DBGOUT("PMU_CMD_REG_CLKOFF        : %x\r\n", MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLKOFF        , PMU_OP_ALL_1, 16));
-	DBGOUT("PMU_CMD_REG_nCORERESET    : %x\r\n", MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nCORERESET    , PMU_OP_2, 4)     );
-	DBGOUT("PMU_CMD_REG_nCOREPORESET  : %x\r\n", MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nCOREPORESET  , PMU_OP_2, 4)     );
-	DBGOUT("PMU_CMD_REG_nDBGRESET     : %x\r\n", MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nDBGRESET     , PMU_OP_2, 4)     );
-	DBGOUT("PMU_CMD_REG_nETMRESET     : %x\r\n", MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nETMRESET     , PMU_OP_2, 4)     );
-	DBGOUT("PMU_CMD_REG_CLAMPCPUOUT  ,: %x\r\n", MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLAMPCPUOUT   , PMU_OP_2, 8)     );
-	DBGOUT("PMU_CMD_REG_CLKOFF        : %x\r\n", MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLKOFF        , PMU_OP_ALL_0, 16));
-	DBGOUT("PMU_CMD_REG_PWRDNREQN     : %x\r\n", MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_PWRDNREQN     , PMU_OP_ALL_1, 16));
-	DBGOUT("PMU_CMD_END               : %x\r\n", MC_PMU_SET_INSTRUCTION(PMU_CMD_END               , PMU_OP_ALL_0, 2 ));
+	DBGOUT("PMU_CMD_REG_PWRDUP        : %x\r\n",
+			MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_PWRDUP, PMU_OP_ALL_1, 8));
+	DBGOUT("PMU_CMD_REG_CLKOFF        : %x\r\n",
+			MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLKOFF, PMU_OP_ALL_0, 8));
+	DBGOUT("PMU_CMD_REG_CPUPWRDOWNPRE : %x\r\n",
+			MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CPUPWRDOWNPRE, PMU_OP_2, 100));
+	DBGOUT("PMU_CMD_REG_CPUPWRDOWNALL : %x\r\n",
+			MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CPUPWRDOWNALL, PMU_OP_2, 255));
+	DBGOUT("PMU_CMD_NOP               : %x\r\n",
+			MC_PMU_SET_INSTRUCTION(PMU_CMD_NOP, PMU_OP_2, 32));
+	DBGOUT("PMU_CMD_REG_PWRDNREQN     : %x\r\n",
+			MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_PWRDNREQN, PMU_OP_ALL_0, 16));
+	DBGOUT("PMU_CMD_WAIT_PWRDNACKN    : %x\r\n",
+			MC_PMU_SET_INSTRUCTION(PMU_CMD_WAIT_PWRDNACKN, PMU_OP_ALL_0, 16));
+	DBGOUT("PMU_CMD_REG_CLKOFF        : %x\r\n",
+			MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLKOFF, PMU_OP_ALL_1, 16));
+	DBGOUT("PMU_CMD_REG_nCORERESET    : %x\r\n",
+			MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nCORERESET, PMU_OP_2, 4));
+	DBGOUT("PMU_CMD_REG_nCOREPORESET  : %x\r\n",
+			MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nCOREPORESET, PMU_OP_2, 4));
+	DBGOUT("PMU_CMD_REG_nDBGRESET     : %x\r\n",
+			MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nDBGRESET, PMU_OP_2, 4));
+	DBGOUT("PMU_CMD_REG_nETMRESET     : %x\r\n",
+			MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nETMRESET, PMU_OP_2, 4));
+	DBGOUT("PMU_CMD_REG_CLAMPCPUOUT,: %x\r\n",
+			MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLAMPCPUOUT, PMU_OP_2, 8));
+	DBGOUT("PMU_CMD_REG_CLKOFF        : %x\r\n",
+			MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLKOFF, PMU_OP_ALL_0, 16));
+	DBGOUT("PMU_CMD_REG_PWRDNREQN     : %x\r\n",
+			MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_PWRDNREQN, PMU_OP_ALL_1, 16));
+	DBGOUT("PMU_CMD_END               : %x\r\n",
+			MC_PMU_SET_INSTRUCTION(PMU_CMD_END, PMU_OP_ALL_0, 2));
 #endif
+	if (index & 1)
+		index++;
+
 	return index;
 }
 
@@ -265,37 +281,43 @@ static unsigned int cluster_power_up_sequence (unsigned short *dst, unsigned int
 	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_PWRDNREQN, PMU_OP_ALL_1, 16);
 	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_END, PMU_OP_ALL_0, 2);
 
+	if (index & 1)
+		index++;
+
 	return index;
 }
 
 // POWER DOWN: op 3
 static unsigned int cpu_power_down_sequence (unsigned short* dst, unsigned int index)
 {
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_PWRDUP	, PMU_OP_ALL_1, 8);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_MASKIRQ	, PMU_OP_ALL_1, 8);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_WAIT_STANDBYWFI	, PMU_OP_3, 8);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_PWRDUP, PMU_OP_ALL_1, 8);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_MASKIRQ, PMU_OP_ALL_1, 8);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_WAIT_STANDBYWFI, PMU_OP_3, 8);
 
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_NOP               , PMU_OP_3, 32);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_PWRDNREQN     , PMU_OP_ALL_0, 16);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_WAIT_PWRDNACKN    , PMU_OP_ALL_0, 16);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLKOFF        , PMU_OP_ALL_1, 16);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_NOP, PMU_OP_3, 32);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_PWRDNREQN, PMU_OP_ALL_0, 16);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_WAIT_PWRDNACKN, PMU_OP_ALL_0, 16);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLKOFF, PMU_OP_ALL_1, 16);
 
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLAMPCPUOUT	, PMU_OP_3,  8);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLAMPCPUOUT, PMU_OP_3,  8);
 
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CPUPWRDOWNPRE , PMU_OP_3, 10);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CPUPWRDOWNALL , PMU_OP_3, 10);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CPUPWRDOWNPRE, PMU_OP_3, 10);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CPUPWRDOWNALL, PMU_OP_3, 10);
 
 	//CPU ALL reset
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nCORERESET    , PMU_OP_3, 1);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nCOREPORESET  , PMU_OP_3, 1);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nDBGRESET     , PMU_OP_3, 1);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nETMRESET     , PMU_OP_3, 1);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nCORERESET, PMU_OP_3, 1);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nCOREPORESET, PMU_OP_3, 1);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nDBGRESET, PMU_OP_3, 1);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nETMRESET, PMU_OP_3, 1);
 
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLKOFF        , PMU_OP_ALL_0, 16);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_MASKIRQ       , PMU_OP_ALL_0, 8);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_PWRDNREQN     , PMU_OP_ALL_1, 16);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLKOFF, PMU_OP_ALL_0, 16);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_MASKIRQ, PMU_OP_ALL_0, 8);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_PWRDNREQN, PMU_OP_ALL_1, 16);
 
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_END               , PMU_OP_ALL_0, 2);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_END, PMU_OP_ALL_0, 2);
+
+	if (index & 1)
+		index++;
 
 	return index;
 }
@@ -303,56 +325,100 @@ static unsigned int cpu_power_down_sequence (unsigned short* dst, unsigned int i
 // POWER DOWN: op 3
 static unsigned int cluster_down_sequence (unsigned short* dst, unsigned int index)
 {
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_PWRDUP	, PMU_OP_ALL_1, 8);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_MASKIRQ	, PMU_OP_ALL_1, 8);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_WAIT_STANDBYWFI	, PMU_OP_ALL_1, 8);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_PWRDUP, PMU_OP_ALL_1, 8);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_MASKIRQ, PMU_OP_ALL_1, 8);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_WAIT_STANDBYWFI, PMU_OP_ALL_1, 8);
 
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_ACINACTM	, PMU_OP_ALL_1, 8);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_ACINACTM, PMU_OP_ALL_1, 8);
 
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_WAIT_STANDBYWFIL2 , PMU_OP_ALL_1, 8);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_WAIT_STANDBYWFIL2, PMU_OP_ALL_1, 8);
 
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_NOP               , PMU_OP_3, 32);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_PWRDNREQN     , PMU_OP_ALL_0, 16);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_WAIT_PWRDNACKN    , PMU_OP_ALL_0, 16);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLKOFF        , PMU_OP_ALL_1, 16);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_NOP, PMU_OP_3, 32);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_PWRDNREQN, PMU_OP_ALL_0, 16);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_WAIT_PWRDNACKN, PMU_OP_ALL_0, 16);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLKOFF, PMU_OP_ALL_1, 16);
 
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLAMPCPUOUT   , PMU_OP_ALL_1,  8);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLAMPCOREOUT  , PMU_OP_ALL_1,  8);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_DFTRAMHOLD    , PMU_OP_ALL_1, 8);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLAMPCPUOUT, PMU_OP_ALL_1,  8);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLAMPCOREOUT, PMU_OP_ALL_1,  8);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_DFTRAMHOLD, PMU_OP_ALL_1, 8);
 
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CPUPWRDOWNPRE , PMU_OP_ALL_1, 24);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CPUPWRDOWNALL , PMU_OP_ALL_1, 24);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CPUPWRDOWNPRE, PMU_OP_ALL_1, 24);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CPUPWRDOWNALL, PMU_OP_ALL_1, 24);
 	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_COREPWRDOWNPRE, PMU_OP_ALL_1, 24);
 	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_COREPWRDOWNALL, PMU_OP_ALL_1, 24);
 
 	//CPU ALL reset
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nCORERESET    , PMU_OP_ALL_0, 1);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nCOREPORESET  , PMU_OP_ALL_0, 1);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nDBGRESET     , PMU_OP_ALL_0, 1);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nETMRESET     , PMU_OP_ALL_0, 1);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nL2RESET      , PMU_OP_ALL_0, 1);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nMBISTRESET   , PMU_OP_ALL_0, 1);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nSOCDBGRESET  , PMU_OP_ALL_0, 8);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nCORERESET, PMU_OP_ALL_0, 1);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nCOREPORESET, PMU_OP_ALL_0, 1);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nDBGRESET, PMU_OP_ALL_0, 1);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nETMRESET, PMU_OP_ALL_0, 1);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nL2RESET, PMU_OP_ALL_0, 1);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nMBISTRESET, PMU_OP_ALL_0, 1);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_nSOCDBGRESET, PMU_OP_ALL_0, 8);
 
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLKOFF        , PMU_OP_ALL_0, 16);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_MASKIRQ       , PMU_OP_ALL_0, 8);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_PWRDNREQN     , PMU_OP_ALL_1, 16);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_PWRDUP        , PMU_OP_ALL_0, 8);
-	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_END               , PMU_OP_ALL_0, 2);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLKOFF, PMU_OP_ALL_0, 16);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_MASKIRQ, PMU_OP_ALL_0, 8);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_PWRDNREQN, PMU_OP_ALL_1, 16);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_PWRDUP, PMU_OP_ALL_0, 8);
+	dst[index++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_END, PMU_OP_ALL_0, 2);
+
+	if (index & 1)
+		index++;
 
 	return index;
 }
 
-void cpupmu_initialize(void)
+int mc_pmu_set_ema(int ema)
 {
+	int idx = 0;
+
+	if (!(ema == 1 || ema == 3 || ema == 4))
+		return 0;
+
 	mc_pmu_pc_set_to_safe();
 
-	cpu_pwr_up     = cpu_power_up_sequence(&PMU_PROGRAM_BUFFER[0], 0);
-	cluster_pwr_up = cluster_power_up_sequence(&PMU_PROGRAM_BUFFER[0], cpu_pwr_up);
-	cpu_pwr_dn     = cpu_power_down_sequence(&PMU_PROGRAM_BUFFER[0], cluster_pwr_up);
-	cluster_pwr_dn = cluster_down_sequence(&PMU_PROGRAM_BUFFER[0], cpu_pwr_dn);
+	mc_pmu_set_opr(PMU_CMD_REG_EMA, PMU_OP_2, ema & 0x7);
 
-	mc_pmu_download_program(&PMU_PROGRAM_BUFFER[0]);
+	unsigned short dst[8];
+	dst[idx++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_PWRDNREQN, PMU_OP_0, 16);
+	dst[idx++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_WAIT_PWRDNACKN, PMU_OP_0, 16);
+	dst[idx++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLKOFF, PMU_OP_ALL_1, 3);
+	dst[idx++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_EMA, PMU_OP_2, 3);
+	dst[idx++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_CLKOFF, PMU_OP_ALL_0, 1);
+	dst[idx++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_REG_PWRDNREQN, PMU_OP_1, 16);
+	dst[idx++] = MC_PMU_SET_INSTRUCTION(PMU_CMD_END, PMU_OP_ALL_0, 2);
+
+	while (mc_pmu_is_busy());
+
+	mc_pmu_download_program(dst, idx);
+	mc_pmu_set_pc(0);
+
+	dmb();
+
+	do {
+		register unsigned int delay = 0x100000;
+		do {
+			__asm__ __volatile__ ("");	// for unroll loop
+		} while (--delay);
+	} while (mc_pmu_is_busy());
+
+	while (mc_pmu_is_busy());
+
+	return 1;
+}
+
+void cpupmu_initialize(void)
+{
+	unsigned int size;
+	mc_pmu_pc_set_to_safe();
+
+	cpu_pwr_up	= 0;
+	cluster_pwr_up	= cpu_power_up_sequence(&PMU_PROGRAM_BUFFER[0], 0, 1);
+	cpu_pwr_dn	= cluster_power_up_sequence(&PMU_PROGRAM_BUFFER[0], cluster_pwr_up);
+	cluster_pwr_dn	= cpu_power_down_sequence(&PMU_PROGRAM_BUFFER[0], cpu_pwr_dn);
+	size = cluster_down_sequence(&PMU_PROGRAM_BUFFER[0], cluster_pwr_dn);
+
+	mc_pmu_download_program(&PMU_PROGRAM_BUFFER[0], size);
 }
 
 void cpu_on_sequence(unsigned int cpu_id)
@@ -364,13 +430,13 @@ void cpu_on_sequence(unsigned int cpu_id)
 
 	dmb();
 
-	while(mc_pmu_is_busy());
+	while (mc_pmu_is_busy());
 
 	mc_pmu_set_pc(0);
 
 	dmb();
 
-	while(mc_pmu_is_busy());
+	while (mc_pmu_is_busy());
 
 	dmb();
 
@@ -385,17 +451,17 @@ void cpu_off_sequence(unsigned int cpu_id)
 
 	dmb();
 
-	while(mc_pmu_is_busy());
+	while (mc_pmu_is_busy());
 
 	dmb();
 
-	mc_pmu_set_pc(cluster_pwr_up * 2);
+	mc_pmu_set_pc(cpu_pwr_dn);
 
 	dmb();
 
 	cpu_wfi();
 
-	while(mc_pmu_is_busy());
+	while (mc_pmu_is_busy());
 
 	dmb();
 
