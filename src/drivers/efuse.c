@@ -12,7 +12,7 @@
 
 static struct nx_efuse_reg  *g_efuse_reg
 	= ((struct nx_efuse_reg *)PHY_BASEADDR_ECID_SECURE_MODULE);
-#if 0
+#if 1
 static const char gst36StrTable[36] =
 {
 	'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',

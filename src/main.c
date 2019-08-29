@@ -11,6 +11,7 @@
 
 #include <sysheader.h>
 #include <pmu.h>
+#include <efuse.h>
 #include <serial.h>
 #include <memory.h>
 #include <gic.h>
@@ -55,6 +56,18 @@ void bl0_bootmsg_on(unsigned int enable)
 	set_boption(value);
 }
 
+int set_ema(void)
+{
+	unsigned int ecid[2], ema = 1;
+	struct nx_ecid_info pei;
+
+	ecid_parser(&pei);
+	if (pei.wafer_no == 6) /*ff : 3, else ema : 1*/
+		ema = 3;
+
+	return mc_pmu_set_ema(ema);	/* arm voltage 1: 1.1V, 3: 1.0V, 4: 0.95V */
+}
+
 void main(void)
 {
 	struct nx_bootmanager bm, *pbm;
@@ -66,6 +79,8 @@ void main(void)
 
 	/* @brief: Disable the No Boot Message option on BL0. */
 	bl0_bootmsg_on(TRUE);
+
+	set_ema();
 
 	is_resume = check_suspend_state();
 
