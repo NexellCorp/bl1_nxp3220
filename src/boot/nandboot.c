@@ -33,11 +33,11 @@ static int nand_check_rnb(int timeout)
 	while (!(pnc->status & 1 << 2) && --timeout);
 	pnc->status |= 1 << 2;
 
-	if (timeout == 0) {
-		printf("rnb TO\r\n");
+	if (!timeout) {
+		DRV_DBGOUT("rnb TO\r\n");
 		return 0;
 	}
-//	else printf("rnb TO value:%x\r\n", timeout);
+
 	return 1;
 }
 
@@ -58,26 +58,11 @@ static int nand_read(struct nandbootinfo *pnbi, int page, int addr,
 	if (!nand_check_rnb(0x1000))
 		return 0;
 
-//	pnc->rand = 0x576A;	// for test
-	pnc->rand = 0;
+	pnc->rand = 0;	// for test : 0x576A
+	pnc->bch_mode &= ~(1 << 4); // decoding mode
 
-	pnc->bch_mode &= ~(1 << 4);	// decoding mode
-#if 0
-	if (size <= 16) {
-		for (i = 0; i < size; i++)
-			buf[i] = (unsigned char)pnc->dat;
-	} else {
-		for (i = 0; i < size; i++) {
-			printf("%02x ", (unsigned char)pnc->dat);
-			if (i % 16 == 15)
-				printf("\r\n");
-		}
-		printf("\r\n");
-	}
-#else
 	for (i = 0; i < size; i++)
 		buf[i] = (unsigned char)pnc->dat;
-#endif
 
 	return 1;
 }
@@ -92,12 +77,14 @@ static int nand_is_bad(struct nandbootinfo *pnbi, int block)
 
 	if (ret) {
 		if ((oob[0] == 0xff) || (oob[1] == 0xff))
-			ret = 0;	/* not bad */
+			ret = 0; /* not bad */
 		else
 			ret = 1;
-	} else
+	} else {
 		ret = 1;
-//	printf("%d block is %sbad\r\n", block, ret ? "" : "not ");
+	}
+
+	DRV_DBGOUT("%d block is %sbad\r\n", block, ret ? "" : "not ");
 	return ret;
 }
 #endif
@@ -112,10 +99,9 @@ static int nand_check_dma(int timeout)
 	pnc->status |= 1 << 6;
 
 	if (timeout == 0) {
-		printf("read dma TO\r\n");
+		DRV_DBGOUT("read dma TO\r\n");
 		return 0;
 	}
-//	else printf("dma TO value:%x\r\n", timeout);
 
 	while (pnc->status & 1 << 25);	// wait for idle NFIF
 	pnc->dma_ctrl &= ~(1 << 0);	// dma mode off and to cpu mode
@@ -127,9 +113,9 @@ static int nand_error_correct(unsigned char *buf)
 {
 	int errcnt = pnc->err_info;
 
-//	printf("page %d ", page);
+//	DRV_DBGOUT("page %d ", page);
 	if (errcnt == 0x3f) {
-		printf("has none correctable error.\r\n");
+		ERROR("has none correctable error.\r\n");
 		return 0;
 	} else if (errcnt > 0) {
 		int i, elp, offset = (1024 * 2 - 918 - 105) * 8;
@@ -141,8 +127,8 @@ static int nand_error_correct(unsigned char *buf)
 				pdata[elp >> 3] ^= 1 << (7 - (elp & 7));
 //			else is ecc data, so no correct
 		}
-		printf("has %d error corrected\r\n", errcnt);
-	} else printf("read done without any error.\r\n");
+		DRV_DBGOUT("has %d error corrected\r\n", errcnt);
+	} else DRV_DBGOUT("read done without any error.\r\n");
 
 	return 1;
 }
@@ -182,7 +168,7 @@ static int nand_read_dma(int page, int addr, unsigned int *buf, int pagesize)
 	if (!nand_check_dma(0x1000))
 		return 0;
 
-	printf("page %d ", page);
+	DRV_DBGOUT("page %d ", page);
 	if (!nand_error_correct((unsigned char *)buf))
 		return 0;
 
@@ -312,11 +298,11 @@ static int nand_erase(int block)
 	unsigned char status = pnc->dat;
 	/* block erase is not successful */
 	if ((status & 1 << 5) && (status & 1 << 0)) {
-		printf("%d block erase fail\r\n", block);
+		ERROR("%d block erase fail\r\n", block);
 		return 0;
 	}
 
-	printf("%d block erase success(%02x)\r\n", block, status);
+	DRV_DBGOUT("%d block erase success(%02x)\r\n", block, status);
 	return 1;
 }
 #endif
@@ -325,15 +311,15 @@ static void nand_check_initial_bad(struct nandbootinfo *pnbi)
 {
 	int j, b = 0;
 
-	printf("initial bad check:\r\n");
+	DRV_DBGOUT("initial bad check:\r\n");
 	for (j = 0; j < 1024; j++) {
 		int k = nand_is_bad(pnbi, j);
 		if (k) {
-			printf("%d ", j);
+			DRV_DBGOUT("%d ", j);
 			b++;
 		}
 	}
-	printf("\r\n%d bad block detected\r\n", b);
+	DRV_DBGOUT("\r\n%d bad block detected\r\n", b);
 }
 #endif
 
@@ -352,11 +338,12 @@ static int nandboot_skip_bad(struct nandbootinfo *pnbi, int block)
 	} while (max_bad_block);
 
 	if (max_bad_block == 0) {
-		printf("nand bad block exceeded(%d)\r\n", bad_cnt);
+		ERROR("nand bad block exceeded(%d)\r\n", bad_cnt);
 		return 0;
 	}
+
 	block += bad_cnt;
-	printf("detect %d bad, new boot block is %d\r\n", bad_cnt, block);
+	DRV_DBGOUT("detect %d bad, new boot block is %d\r\n", bad_cnt, block);
 
 	return block;
 }
@@ -374,16 +361,53 @@ static int nandboot_get_start_block(struct nandbootinfo *pnbi,
 
 	return test_block;
 }
+
+#define NAND_BL0_CMD_TIME	0x55061e05
+#define NAND_BL0_DAT_TIME	0x3205140a
+#define NAND_BL0_DDR_TIME	0x23000002
+
+static struct nand_time {
+	unsigned int cmd_time;
+	unsigned int dat_time;
+	unsigned int ddr_time;
+} nand_time = { NAND_BL0_CMD_TIME, NAND_BL0_DAT_TIME, NAND_BL0_DDR_TIME };
+
+static inline void nand_timing(struct sbi_header *pbi, struct nand_time *pnt)
+{
+	struct nand_time nt = {
+		.cmd_time = pbi->nand_cmd_time,
+		.dat_time = pbi->nand_dat_time,
+		.ddr_time = pbi->nand_ddr_time,
+	};
+
+	if (pbi->nand_cmd_time)
+		nt.cmd_time = pnt->cmd_time = pbi->nand_cmd_time;
+	else
+		nt.cmd_time = pnt->cmd_time;
+
+	if (pbi->nand_dat_time)
+		nt.dat_time = pnt->dat_time = pbi->nand_dat_time;
+	else
+		nt.dat_time = pnt->dat_time;
+
+	if (pbi->nand_ddr_time)
+		nt.cmd_time = pnt->cmd_time = pbi->nand_cmd_time;
+	else
+		nt.ddr_time = pnt->ddr_time;
+
+	mmio_write_32(PHY_BASEADDR_NANDC_MODULE + 0x1c, nt.cmd_time);
+	mmio_write_32(PHY_BASEADDR_NANDC_MODULE + 0x20, nt.dat_time);
+	mmio_write_32(PHY_BASEADDR_NANDC_MODULE + 0x24, nt.ddr_time);
+}
+
 int nandboot(struct nx_bootmanager *pbm, unsigned int option)
 {
 	struct nandbootinfo nbi;
 	struct nandbootinfo *pnbi = &nbi;
+	struct sbi_header *pbi = (struct sbi_header *)&pbm->bi;
 	unsigned int start_block = pbm->bi.dbi.device_addr;
-//	unsigned char __attribute__ ((packed, aligned(32))) nbuf[1024];
 	unsigned char *nbuf = (unsigned char *)0xfffffc00;
-//	unsigned char *nbuf = 0xffff8c00;
 	int ret = FALSE, block_size;
-
 
 	/* step 00. get the bl0 function-table address */
 	g_nand_fn = ((struct nx_nand_fnptr *)&g_bl1_fn->nand_fn);
@@ -393,18 +417,6 @@ int nandboot(struct nx_bootmanager *pbm, unsigned int option)
 	/* step 01-1. initialize the nand controller */
 	g_nand_fn->nandc_init(pnbi, option);
 
-	pnc->cmd_time =
-		15 << 24 |	// RHW
-		1 << 16 |	// SETUP
-		2 <<  8 |	// WIDTH
-		2 <<  0;	// HOLD
-
-	pnc->dat_time =
-		15 << 24 |	// WHR
-		0 << 16 |	// SETUP
-		4 <<  8 |	// WIDTH
-		2 <<  0;	// HOLD
-
 	pnbi->pageperblock = (pnbi->pagesize == 2048) ? 64 : 128;
 	block_size = pnbi->pagesize * pnbi->pageperblock;
 	pnbi->checkimagecnt = 1;	// no next retry
@@ -412,7 +424,7 @@ int nandboot(struct nx_bootmanager *pbm, unsigned int option)
 
 	/* step 01-2. reset the nand device */
 	if (g_nand_fn->nand_reset() == 0) {
-		printf("reset failure.\r\n");
+		ERROR("reset failure.\r\n");
 		goto error;
 	}
 #if 0
@@ -431,22 +443,22 @@ int nandboot(struct nx_bootmanager *pbm, unsigned int option)
 	nand_check_initial_bad (pnbi);
 #endif
 
-	printf("nand bad check start address %x\r\n", start_block);
+	DRV_DBGOUT("nand bad check start address %x\r\n", start_block);
 	start_block /= block_size;
-	printf("nand bad check start block %x\r\n", start_block);
+	DRV_DBGOUT("nand bad check start block %x\r\n", start_block);
 	start_block = nandboot_get_start_block(pnbi, start_block);
-	printf("new start block is %d(0x%08x)\r\n", start_block,
+	DRV_DBGOUT("new start block is %d(0x%08x)\r\n", start_block,
 			start_block * block_size);
 	start_block = nandboot_skip_bad(pnbi, start_block);
 	if (start_block == 0) {
-		printf("max bad in boot block\r\n");
+		ERROR("max bad in boot block\r\n");
 		goto error;
 	}
 
 	pnbi->zeroimage_page = start_block * pnbi->pageperblock;
 	pnbi->copyimage_page = pnbi->zeroimage_page;
 
-	printf("nand boot from %d page\r\n", pnbi->zeroimage_page);
+	DRV_DBGOUT("nand boot from %d page\r\n", pnbi->zeroimage_page);
 
 	/* step 02-1. read the boot header */
 	ret = g_nand_fn->nand_read(pnbi, (void *)&pbm->bi,
@@ -460,15 +472,11 @@ int nandboot(struct nx_bootmanager *pbm, unsigned int option)
 		ERROR("Header Signature Failed! (%08x)\r\n", pbm->bi.signature);
 		goto error;
 	}
-#if 0
-	unsigned int *ptr = (unsigned int *)&pbm->bi;
-	for (i = 0; i < 256 / 4; i++) {
-		printf("%08x ", ptr[i]);
-		if (i % 8 == 7)
-			printf("\r\n");
-	}
-	printf("\r\n");
-#endif
+
+	/*
+	 * set nand timing
+	 */
+	nand_timing(pbi, &nand_time);
 
 	/* step 03. read the hash data */
 	ret = g_nand_fn->nand_read(pnbi,
@@ -484,7 +492,7 @@ int nandboot(struct nx_bootmanager *pbm, unsigned int option)
 		1024 * pnbi->datasize;
 	int load_size;// = pbm->bi.load_size;
 	int loaded_size = sizeof(struct sbi_header) + 256;	// 512 bytes
-	printf("nand image read to %x, size:%d\r\n",
+	DRV_DBGOUT("nand image read to %x, size:%d\r\n",
 			load_addr, pbm->bi.load_size);
 
 	if (pbm->bi.load_size + loaded_size > blockdata) {
@@ -495,7 +503,7 @@ int nandboot(struct nx_bootmanager *pbm, unsigned int option)
 	pbm->bi.load_size -= load_size;
 
 	do {
-		printf("nand block load size:%d(%d)\r\n",
+		DRV_DBGOUT("nand block load size:%d(%d)\r\n",
 				load_size, pbm->bi.load_size);
 		/* step 04. read the boot-image */
 		int option = get_boption();
@@ -510,13 +518,13 @@ int nandboot(struct nx_bootmanager *pbm, unsigned int option)
 		start_block++;
 		start_block = nandboot_skip_bad(pnbi, start_block);
 		if (start_block == 0) {
-			printf("max bad at boot blocks\r\n");
+			ERROR("max bad at boot blocks\r\n");
 			goto error;
 		}
 		pnbi->zeroimage_page = start_block * pnbi->pageperblock;
 		pnbi->copyimage_page = pnbi->zeroimage_page;
 
-		printf("nand boot from %d page\r\n", pnbi->zeroimage_page);
+		DRV_DBGOUT("nand boot from %d page\r\n", pnbi->zeroimage_page);
 
 		if (pbm->bi.load_size > blockdata) {
 			load_size = blockdata;
@@ -530,7 +538,7 @@ int nandboot(struct nx_bootmanager *pbm, unsigned int option)
 
 error:
 	/* step 07. deintialize the nand controller */
-//	g_nand_fn->nandc_deinit();
+	// g_nand_fn->nandc_deinit();
 
 	return ret;
 }
