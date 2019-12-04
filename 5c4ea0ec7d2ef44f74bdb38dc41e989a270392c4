@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5059b6bd_6554141f",
+        "filename": "src/drivers/plat_pm.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1015645
+      },
+      "writtenOn": "2019-12-04T11:49:08Z",
+      "side": 1,
+      "message": "please, set to macro",
+      "range": {
+        "startLine": 180,
+        "startChar": 19,
+        "endLine": 180,
+        "endChar": 25
+      },
+      "revId": "5c4ea0ec7d2ef44f74bdb38dc41e989a270392c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b0b55bab_c8af8844",
+        "filename": "src/drivers/plat_pm.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1015645
+      },
+      "writtenOn": "2019-12-04T11:49:08Z",
+      "side": 1,
+      "message": "please, set to macro",
+      "range": {
+        "startLine": 199,
+        "startChar": 19,
+        "endLine": 199,
+        "endChar": 25
+      },
+      "revId": "5c4ea0ec7d2ef44f74bdb38dc41e989a270392c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7913a7a2_4fb5b8ce",
+        "filename": "src/drivers/plat_pm.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1015645
+      },
+      "writtenOn": "2019-12-04T11:49:08Z",
+      "side": 1,
+      "message": "insert empty line before",
+      "range": {
+        "startLine": 228,
+        "startChar": 0,
+        "endLine": 228,
+        "endChar": 1
+      },
+      "revId": "5c4ea0ec7d2ef44f74bdb38dc41e989a270392c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
