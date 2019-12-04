@@ -17,7 +17,13 @@
 
 #define NX_SUSPEND_SIGNATURE			0x57505200
 #define NX_SUSPEND_HASH_ADDR			0x41000000
+#define SUSPEND_HASH_FULL_SIZE
+#ifdef SUSPEND_HASH_FULL_SIZE
 #define NX_SUSPEND_HASH_SIZE			(496 * 1024 * 1024)
+#else
+/* hash only kernel size */
+#define NX_SUSPEND_HASH_SIZE			(10 * 1024 * 1024)
+#endif
 
 struct nx_vddpwr_reg *g_vddpwr_reg =
 	((struct nx_vddpwr_reg *)PHY_BASEADDR_VDDPWR);
@@ -171,7 +177,7 @@ static void system_vdd_pwroff(void)
 
 int check_suspend_hash(void)
 {
-	unsigned int hash[256/4], s_hash;
+	unsigned int hash[256/32], s_hash;
 	unsigned int base, size;
 
 	base = mmio_read_32(&g_vddpwr_reg->new_scratch[2]);
@@ -190,7 +196,7 @@ int check_suspend_hash(void)
 
 void suspend_mark(unsigned int base, unsigned int size, unsigned int entry_point)
 {
-	unsigned int hash[256/4];
+	unsigned int hash[256/32];
 
 	sss_generate_hash(base, size, (unsigned char*)&hash);
 
@@ -219,6 +225,8 @@ void system_suspend(unsigned int entry_point)
 {
 	/* @brief: mark the suspend the signature (and hash) */
 	suspend_mark(NX_SUSPEND_HASH_ADDR, NX_SUSPEND_HASH_SIZE, entry_point);
+	/* @brief: when going suspend state, need to proof why need a delay */
+	ldelay(10);
 
 	dmb();
 
