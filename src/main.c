@@ -11,6 +11,7 @@
 
 #include <sysheader.h>
 #include <pmu.h>
+#include <efuse.h>
 #include <serial.h>
 #include <memory.h>
 #include <gic.h>
@@ -55,6 +56,68 @@ void bl0_bootmsg_on(unsigned int enable)
 	set_boption(value);
 }
 
+/* ASV choice table based on HPM and IDS values */
+struct asv_table {
+        unsigned int hpm_limit; /* HPM value to decide target group */
+        unsigned int ids_limit; /* IDS value to decide target group */
+};
+
+/* ASV table has 5 levels */
+static struct asv_table nxp3220_limit[] = {
+	/* HPM, IDS */
+        { 320, 3},		/*ASV0*/
+        { 330, 4},		/*ASV1*/
+        { 340, 5},		/*ASV2*/
+        { 350, 6},		/*ASV3*/
+        { 360, 7},		/*ASV4*/
+        { 370, 9},		/*ASV5*/
+        { 380, 11},		/*ASV6*/
+        { 390, 13},		/*ASV7*/
+        { 400, 16},		/*ASV8*/
+        { 410, 19},		/*ASV9*/
+        { 420, 24},		/*ASV10*/
+        { 430, 29},		/*ASV11*/
+        { 440, 35},		/*ASV12*/
+        { 450, 43},		/*ASV13*/
+        { 460, 52},		/*ASV14*/
+        { 470, 63},		/*ASV15*/
+        { 480, 77},		/*ASV16*/
+        { 490, 93},		/*ASV17*/
+        { 500, 113},	/*ASV18*/
+        { 510, 137},	/*ASV19*/
+        { 999, 999},	/* Reserved Group */
+};
+
+struct nx_ecid_info pei;
+static unsigned int asv_group = 1;
+
+int set_ema(void)
+{
+	unsigned int ema = 1;
+	unsigned int hpm7;
+	int asv_i = 0;
+
+	ecid_parser(&pei);
+	hpm7 = (pei.hpm_ids[2] >>6) & 0x3ff;
+
+	for (asv_i = 0; asv_i < 21; asv_i++) {
+		if (( pei.ids <= nxp3220_limit[asv_i].ids_limit) || \
+			(hpm7 <= nxp3220_limit[asv_i].hpm_limit)) {
+		break;
+		}
+	}
+
+	asv_group = asv_i;
+
+	/* ff : asv13 ~ asv19*/
+	if (asv_group >= 13) /*ff : 3, else ema : 1*/
+		ema = 3;
+	else
+		ema = 1;
+
+	return mc_pmu_set_ema(ema);
+}
+
 void main(void)
 {
 	struct nx_bootmanager bm, *pbm;
@@ -67,6 +130,7 @@ void main(void)
 	/* @brief: Disable the No Boot Message option on BL0. */
 	bl0_bootmsg_on(TRUE);
 
+	set_ema();
 	is_resume = check_suspend_state();
 
 	pbm = ((struct nx_bootmanager *)&bm);
@@ -82,6 +146,7 @@ void main(void)
 		serial_init(serial_ch);
 
 	build_information();
+	SYSMSG("[bl1] ids:%d, cpu_hpm:%d, asv_group:%d\n\r", pei.ids, (pei.hpm_ids[2]>>6)&0x3FF, asv_group);
 
 	cpupmu_initialize();
 

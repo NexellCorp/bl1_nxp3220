@@ -12,7 +12,8 @@
 
 static struct nx_efuse_reg  *g_efuse_reg
 	= ((struct nx_efuse_reg *)PHY_BASEADDR_ECID_SECURE_MODULE);
-#if 0
+
+#if 1
 static const char gst36StrTable[36] =
 {
 	'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
@@ -61,15 +62,18 @@ void ecid_parser(struct nx_ecid_info *pei)
 {
 	unsigned int ecid[4], i;
 
-	for (i = 0; i < 4; i++)
+	for (i = 0; i < 4; i++) {
 		ecid[i] = mmio_read_32(&g_efuse_reg->ecid[i]);
+		pei->hpm_ids[i] = mmio_read_32(&g_efuse_reg->hpm_ids[i]);
+	}
 
 	pei->lotid	= mtol((ecid[0] & 0x1FFFFF), 21);
 	pei->wafer_no	= mtol((ecid[0] >> 21) & 0x1F, 5);
 	pei->x_pos	= mtol(((ecid[0] >> 26) & 0x3F)
 				| ((ecid[1] & 0x3) << 6), 8);
 	pei->y_pos	= mtol((ecid[1] >>  2) & 0xFF, 8);
-	pei->ids	= mtol((ecid[1] >> 16) & 0xFF, 8);
+	//no mtol for NXP3220 alone
+	pei->ids	= (ecid[1] >> 16) & 0xFF;
 	pei->ro		= mtol((ecid[1] >> 24) & 0xFF, 8);
 	pei->usb_product_id	= (ecid[3] & 0xFFFF);
 	pei->usb_vendor_id	= (ecid[3]>>16) & 0xFFFF;
