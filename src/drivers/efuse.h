@@ -72,6 +72,7 @@ struct nx_ecid_info {
        unsigned int ro;
        unsigned int usb_product_id;
        unsigned int usb_vendor_id;
+       unsigned int hpm_ids[4];
 	       char str_lotid[6];
 };
 
