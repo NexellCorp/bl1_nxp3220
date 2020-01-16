@@ -174,9 +174,8 @@ static int nand_read(struct nandbootinfo *pnbi, int page, int offs,
 	return 1;
 }
 
-#define NAND_OOB_SIZE		32
-#define NAND_FACTORY_OOB_POS	(pnbi->pagesize)
-#define NAND_RUNTIME_OOB_POS	(512)
+#define NAND_OOB_BADMARK_SIZE	2
+#define NAND_OOB_BADMARK_OFFS	(pnbi->pagesize)
 #define NAND_OOB_BADMARK_POS	0
 #define IS_BADBLOCK(oob)	\
 	((oob[NAND_OOB_BADMARK_POS] == 0x00) && \
@@ -184,8 +183,8 @@ static int nand_read(struct nandbootinfo *pnbi, int page, int offs,
 
 static int nand_is_bad(struct nandbootinfo *pnbi, int block)
 {
-	unsigned char oob[NAND_OOB_SIZE];
-	int isbad = 0;
+	unsigned char oob[NAND_OOB_BADMARK_SIZE] = { 0, };
+	int isbad = 1;
 	int ret;
 
 	/*
@@ -193,9 +192,9 @@ static int nand_is_bad(struct nandbootinfo *pnbi, int block)
 	 * PAGE + OOB[0:1]=0x00:0xFF
 	 */
 	ret = nand_read(pnbi, block * pnbi->pageperblock,
-			NAND_FACTORY_OOB_POS, oob, sizeof(oob));
-	if (!ret || IS_BADBLOCK(oob))
-		isbad = 1;
+			NAND_OOB_BADMARK_OFFS, oob, sizeof(oob));
+	if (ret && !IS_BADBLOCK(oob))
+		isbad = 0;
 
 	DRV_DBGOUT("%04d block is %sbad oob[0x%02x][0x%02x]\r\n\n",
 		block, isbad ? "" : "not ",
