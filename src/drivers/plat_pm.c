@@ -227,8 +227,8 @@ void system_suspend(unsigned int entry_point)
 	/* @brief: mark the suspend the signature (and hash) */
 	suspend_mark(NX_SUSPEND_HASH_ADDR, NX_SUSPEND_HASH_SIZE, entry_point);
 
-	/* @brief: when going suspend state, need to proof why need a delay */
-	ldelay(10);
+	/* @brief: when going suspend state, disable mmu */
+	disable_mmu();
 
 	dmb();
 
