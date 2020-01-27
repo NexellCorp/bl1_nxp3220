@@ -39,4 +39,6 @@ void set_boption(int);
 
  int get_cpuid(void);
 
+void disable_mmu(void);
+
 #endif	// __LIBARMV7_H__
