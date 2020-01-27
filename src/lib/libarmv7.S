@@ -100,3 +100,10 @@ ENTRY(invaildate_l1_icache)
 	mcrne	p15, 0, r0, c7, c5, 0	   					@ ICIALLU - Invalidate instruction cache and flush branch target cache
         bx      lr
 ENDPROC(invaildate_l1_icache)
+
+ENTRY(disable_mmu)
+	mrc 	p15, 0, r0, c1, c0, 0						@ Read System Control Register
+	bic 	r0, r0, #0x1							@ Clear M bit  0 to disable MMU
+	mcr 	p15, 0, r0, c1, c0, 0						@ Write System Control Register
+	bx	lr
+ENDPROC(disable_mmu)
