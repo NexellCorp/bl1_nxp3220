@@ -25,6 +25,7 @@
 #define NX_SUSPEND_HASH_SIZE			(10 * 1024 * 1024)
 #endif
 #define NX_HASH_SIZE				(256/32)
+#define USE_RTC					(0x2008C000 + 0x024)
 
 struct nx_vddpwr_reg *g_vddpwr_reg =
 	((struct nx_vddpwr_reg *)PHY_BASEADDR_VDDPWR);
@@ -165,6 +166,11 @@ static void system_vdd_pwroff(void)
 
 	/* step 05. VDD Control ([1]: VDDPWERON_DDR, [0]:VDDPOWRON) */
 	mmio_clear_32(&g_alive_reg->vddctrl_read, 0x3);
+
+	if ((mmio_read_32(USE_RTC) & 0x1) == 0x1) {
+		/* if rct use, disable pwr xti */
+		mmio_write_32(&g_vddpwr_reg->vddpwr_on_xti, 0x0);
+	}
 
 	/* step 06. VDD Off -> Wakeup Start Delay  */
 	mmio_write_32(&g_vddpwr_reg->vddoff_delay_for_wakeup_mask, 1000);
