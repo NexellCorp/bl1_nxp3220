@@ -174,7 +174,7 @@ static void get_pmsk_parser(int *pm, int *sk, int *sscg)
  * Step 05. Set the PMS value.
  *	      -> Set the Dirty-Flag and RUN_CHAGE after setting the PMS value.
  *************************************************************/
-
+#if 0
 /* change the pll-frequency */
 int nx_change_pll(int index, int pm, int sk, int sscg)
 {
@@ -206,12 +206,65 @@ int nx_change_pll(int index, int pm, int sk, int sscg)
 
 	return true;
 }
-
-int pll_initialize(void)
+#endif
+static inline void clk_pll_wait_lock(int num, unsigned long cycle)
 {
+	struct nx_pll_reg *base
+		= (struct nx_pll_reg*)get_pll_baseaddr(num);
+
+	unsigned long st_count;
+    unsigned long cnt;
+
+	st_count = mmio_read_32(&base->pll_dbg0);
+    st_count += cycle;
+    do {
+	    cnt = mmio_read_32(&base->pll_dbg0);
+    } while(cnt < st_count);
+}
+
+/* change the pll-frequency */
+int nx_change_pll(int index, int pm, int sk, int sscg)
+{
+	struct nx_pll_reg *base =
+		(struct nx_pll_reg *)get_pll_baseaddr(index);
+
+//	if (clock_is_stable(index))
+//		return false;
+
+	pll_set_oscmux(index, PLL_MUX_OSCCLK);
+
+	mmio_write_32(&base->pll_cfg1, pm);
+	mmio_write_32(&base->pll_cfg2, sk);
+	mmio_write_32(&base->pll_ctrl1, sscg);
+
+	mmio_clear_32(&base->pll_cfg0, 0);
+	mmio_set_32(&base->pll_ctrl, PLL_DIRTYFLAG);
+	mmio_set_32(&base->pll_ctrl, UPDATE_CONFIG_DIRECTLY);
+	mmio_set_32(&base->pll_cfg0, 0);
+	mmio_set_32(&base->pll_ctrl, PLL_DIRTYFLAG);
+	mmio_set_32(&base->pll_ctrl, UPDATE_CONFIG_DIRECTLY);
+
+	/* Wait (p + 1) * lock_cycle */
+	clk_pll_wait_lock(index, 800);
+
+	pll_set_oscmux(index, PLL_MUX_PLL_FOUT);
+
+	return true;
+}
+
+int pll_initialize(int freq)
+{
+#if 0
 	int pm[5], sk[5], sscg[5];
 	int i, ret = false;
+#endif
 
+	int ret = false;
+	if(freq==400)
+		ret = nx_change_pll(2, 0xc80003, 0x2, 0);
+	else if(freq==500)
+		ret = nx_change_pll(2, 0xfa0003, 0x2, 0);
+#if 0
 	get_pmsk_parser(pm, sk, sscg);
 
 	for (i = 2; i < NUMBER_OF_MAX_PLL; i++) {
@@ -222,6 +275,6 @@ int pll_initialize(void)
 		}
 		clock_is_stable(i);
 	}
-
+#endif
 	return ret;
 }

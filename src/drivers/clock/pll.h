@@ -64,6 +64,6 @@ int get_pll_freq(int num);
 int get_pre_pll_freq(unsigned int num, unsigned int pm,
 			unsigned int sk);
 int nx_change_pll(int index, int pm, int sk, int sscg);
-int pll_initialize(void);
+int pll_initialize(int freq);
 
 #endif // #ifndef __PLL_H__
