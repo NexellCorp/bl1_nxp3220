@@ -21,11 +21,14 @@
 #include <plat_pm.h>
 #include <plat_load.h>
 #include <main.h>
+#include <hpm.h>
+#include <sysreg.h>
 
 /* Global Vriables */
 unsigned char g_rsa_public_key[512];
 
 struct nx_bl0_fnptr bl1_fn;
+struct nx_hpm_info s_hpm;
 
 void param_set_fnptr(void)
 {
@@ -68,6 +71,12 @@ int set_ema(void)
 	return mc_pmu_set_ema(ema);	/* arm voltage 1: 1.1V, 3: 1.0V, 4: 0.95V */
 }
 
+struct nx_syshpm_reg *g_hpmreg =
+	((struct nx_syshpm_reg *)0x27001a00);
+struct nx_divpll_reg *g_divreg =
+	((struct nx_divpll_reg *)0x22000460);
+struct nx_cpuhpm_reg *g_hpmreg_c =
+	((struct nx_cpuhpm_reg *)0x22000600);
 void main(void)
 {
 	struct nx_bootmanager bm, *pbm;
@@ -90,6 +99,17 @@ void main(void)
 #ifdef EARLY_SERIAL
 	s_early = serial_init(serial_ch);
 #endif
+	mmio_write_32(&g_hpmreg->hpm0_sys, 0x2);
+	pll_initialize(500);
+	read_hpm_core(&s_hpm);
+	pll_initialize(400);
+	hpm_parser(&s_hpm);
+//	printf("[kk] syshpm: 0x%x\n\r", g_hpmreg->hpm0_sys);
+//	printf("[kk] syshpm_div: 0x%x\n\r", g_hpmreg->div_v);
+//	printf("[kk] cpuhpm: 0x%x\n\r", g_hpmreg_c->hpm0_cpu);
+//	printf("[kk] cpuhpm_div: 0x%x\n\r", g_hpmreg_c->div_v1);
+//	printf("[kk] divpll: 0x%x\n\r", g_divreg->div_sys);
+//
 	/* @brief: copy the key(bootkey + userkey) -> secure memory */
 	memcpy((void*)g_rsa_public_key, (void*)BOOTKEY_BASEADDR, 512);
 

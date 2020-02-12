@@ -131,4 +131,19 @@ struct nx_sysreg_cpu_reg {
 	volatile unsigned int tsvalue;						/* 0x60 */
 };
 
+struct nx_syshpm_reg {
+	volatile unsigned int hpm0_sys;					/* 0x0 		*/
+	volatile unsigned int spares[23];				/* 0x04 ~ 0x5c	*/
+	volatile unsigned int div_v;					/* 0x60		*/
+};
+
+struct nx_divpll_reg {
+	volatile unsigned int div_sys;					/* 0x0 		*/
+};
+
+struct nx_cpuhpm_reg {
+	volatile unsigned int hpm0_cpu;					/* 0x0 		*/
+	volatile unsigned int spares[23];				/* 0x04 ~ 0x5c	*/
+	volatile unsigned int div_v1;					/* 0x60		*/
+};
 #endif /* #ifndef __SYSREG_H__ */
