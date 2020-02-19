@@ -11,7 +11,7 @@
 #include <secure_rw.h>
 
 /* Gloval Variables (To Do..After.. ) */
-static struct s_rw_filter g_s_rw_list[7] =
+static struct s_rw_filter g_s_rw_list[] =
 {
 	/* Index 0 - Alive GPIO */
 	{
@@ -55,43 +55,47 @@ static struct s_rw_filter g_s_rw_list[7] =
 		(PHY_BASEADDR_SYS_BUS_GPV_M4 + 0x138),
 		0xFFFFFFFF
 	},
+	/* Index 7 - eFuse bank */
+	{
+		(PHY_BASEADDR_ECID_SECURE_MODULE),
+		(PHY_BASEADDR_ECID_SECURE_MODULE + 0x530),
+		0xFFFFFFFF
+	},
 };
 
-static unsigned int check_rw_list(unsigned int addr, unsigned int value)
+#define ARRAY_SIZE(x) 	(sizeof(x) / sizeof((x)[0]))
+#define S_RW_LIST_SIZE	((int)ARRAY_SIZE(g_s_rw_list))
+
+/* if access ok, return 1 */
+static unsigned int is_valid_access(unsigned int addr)
 {
-	volatile unsigned int index = 0, cnt;
+	struct s_rw_filter *p = g_s_rw_list;
+	int i;
 
-	cnt = (sizeof(g_s_rw_list)/sizeof(struct s_rw_filter));
+	for (i = 0; i < S_RW_LIST_SIZE; i++) {
+		if ((p[i].start <= addr) && (p[i].end > addr))
+			return 1;
+	}
 
-	do {
-		if ((g_s_rw_list[index].start <= addr)
-			&& (g_s_rw_list[index].end >= addr)) {
-			value &= g_s_rw_list[index].mask;
-			return value;
-		}
-	} while(index++ < cnt);
-
-	return value;
+	return 0;
 }
 
 int secure_write_32(void *addr, unsigned int value)
 {
-	volatile unsigned int cal_value;
-
 	/* Check the Secure R/W Memory */
-	cal_value = check_rw_list((unsigned int)addr, value);
+	if (!is_valid_access((unsigned int)addr))
+		return -1;
 
-	return mmio_write_32(addr, cal_value);
+	mmio_write_32(addr, value);
+
+	return 0;
 }
 
 int secure_read_32(void *addr)
 {
-	volatile unsigned int cal_value, value;
-
-	value = mmio_read_32(addr);
-
 	/* Check the Secure R/W Memory */
-	cal_value = check_rw_list((unsigned int)addr, value);
+	if (!is_valid_access((unsigned int)addr))
+		return -1;
 
-	return cal_value;
+	return mmio_read_32(addr);
 }
