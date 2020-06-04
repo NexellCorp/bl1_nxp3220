@@ -22,6 +22,9 @@
 #include <plat_load.h>
 #include <main.h>
 
+#define	ALIVE_BASE	(0x20080000)
+#define	BOOT_OPTION	(ALIVE_BASE + 0xC86C)
+
 /* Global Vriables */
 unsigned char g_rsa_public_key[512];
 
@@ -121,14 +124,27 @@ int set_ema(void)
 void main(void)
 {
 	struct nx_bootmanager bm, *pbm;
-	int device = ((get_boption() >> BOOTMODE) & 0x7);
+	unsigned int option = get_boption();
+	unsigned int boot_device = ((option >> BOOTMODE) & 0x7);
 	int serial_ch = g_nsih->serial_ch;
 	int cpu_id = get_cpuid();
 	int s_early = false;
 	unsigned int is_resume = FALSE;
+	unsigned int boot_mode;
 
 	/* @brief: Disable the No Boot Message option on BL0. */
 	bl0_bootmsg_on(TRUE);
+
+	/* @brief: If boot fail on BL0, set boot option again on bl1.
+	* This sets acording to compare BOOT_OPTION and co-process.
+	* To setting takes precedence over the value applied to
+	* the P15 by the BOOT_OPTION value. */
+	boot_mode = ((readl(BOOT_OPTION)  >> BOOTMODE) & 0x7);
+	if(boot_device != boot_mode){
+		option &= ~0x7UL;	/* mask boot mode */
+		option |= boot_mode << BOOTMODE;
+		set_boption(option);
+	}
 
 	set_ema();
 	is_resume = check_suspend_state();
@@ -151,7 +167,7 @@ void main(void)
 	cpupmu_initialize();
 
 	/* @brief: Before setting tzpc, turn on power to access usb-block. */
-	if (device != USBBOOT)
+	if (boot_device != USBBOOT)
 		usb_blk_pwrup();
 
 	gic_initialize(cpu_id);
