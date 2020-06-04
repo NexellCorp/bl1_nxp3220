@@ -147,15 +147,46 @@ void plat_load(unsigned int is_resume, struct nx_bootmanager *pbm)
 	}
 
 	success = plat_next_load(pbm, option);
-#if 0
-	if (success >= 0)
-		success = check_platfrom(pbm, &g_rsa_public_key[256], 0);
-#endif
-	if (success >= 0) {
+
+	/* retry boot seqence */
+	if (success == FALSE) {
+		unsigned int next_port = (option >> NEXTTRYPORT) & 0x3;
+		ERROR("FIRST bootmode Failed!! (0x%x)\r\n", option);
+		if (3 == next_port) {
+			option |= (1 << BOOTTRY);
+			option |= USBBOOT << BOOTMODE;
+			ERROR("next port is 3, goto USBBOOT bootmode!! (0x%x)\r\n", option);
+			set_boption(option);
+
+			success = plat_next_load(pbm, option);
+		} else {
+			option &= ~0x67UL;	/* mask boot mode, portnumber for SDBOOT */
+			option |= next_port << PORTNUMBER;
+			option |= SDBOOT << BOOTMODE;
+			ERROR("SECOEND, SDBOOT bootmode!! (0x%x)\r\n", option);
+			set_boption(option);
+
+			success = plat_next_load(pbm, option);
+			if (success == FALSE) {
+				option &= ~0x7UL;	/* mask boot mode */
+				option |= (1 << BOOTTRY);
+				option |= USBBOOT << BOOTMODE;
+				ERROR("LAST, USBBOOT bootmode!! (0x%x)\r\n", option);
+				set_boption(option);
+
+				success = plat_next_load(pbm, option);
+			}
+		}
+	}
+
+	if (success == TRUE) {
 		/* @brief: Relocate the header of base address */
 		memcpy((void*)RE_HEADER_BASEADDR, (void*)&pbm->bi,
 			sizeof(struct sbi_header));
 		g_nsih = (struct sbi_header *)RE_HEADER_BASEADDR;
+
+		/* set boot mode at scratch reg */
+		mmio_write_32(&g_vddpwr_reg->new_scratch[15], option);
 
 		plat_s_launch(is_resume, 0, pbm->bi.launch_addr, 0);
 	}
@@ -213,11 +244,6 @@ int plat_s_load(struct platform_info *ppi)
 			success = sss_load(pbm, option);
 			if (success != TRUE)
 				WARN("SSS Firmware Load Failed!! (%d) \r\n", success);
-#if 0
-			else
-				success = check_platfrom(pbm,
-					&g_rsa_public_key[256], 0);
-#endif
 		}
 
 		if (is_resume != TRUE) {
@@ -250,9 +276,6 @@ int plat_s_load(struct platform_info *ppi)
 			ERROR("Boot Loade 3-3 Load Failed!! (%d) \r\n", success);
 			return -BL33_LOAD_FAILED;
 		}
-#if 0
-		success = check_platfrom(pbm, &g_rsa_public_key[256], 0);
-#endif
 	}
 	/* @brief: Copies the header for reference in BL2 */
 	memcpy((void*)USERKEY_BASEADDR, (void*)&pbm->bi, sizeof(struct sbi_header));

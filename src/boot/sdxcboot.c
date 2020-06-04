@@ -311,7 +311,8 @@ static int emmcboot_n(struct nx_bootmanager *pbm, sdxcboot_status *pst,
 	unsigned int *f_sector = (unsigned int *)&pbm->bi;
 	register unsigned int sd_speed, bitwidth;
 	unsigned int mode, sector_cnt, rsn = 0;
-	int ret = TRUE;
+	int ret;
+	int result = FALSE;
 
 	/* @brief: Confirm ? */
 	if (pst->bhigh_speed == TRUE)
@@ -383,7 +384,7 @@ static int emmcboot_n(struct nx_bootmanager *pbm, sdxcboot_status *pst,
 	sector_cnt = ((pbi->load_size + (SDMMC_BLOCK_LENGTH - 1))
 				/ SDMMC_BLOCK_LENGTH);
 
-	ret = g_sdmmcfn->sdmmc_read_sectors(pst, rsn,
+	result = g_sdmmcfn->sdmmc_read_sectors(pst, rsn,
 				sector_cnt, (unsigned int*)pbi->load_addr);
 	rsn += sector_cnt;
 
@@ -391,10 +392,10 @@ static int emmcboot_n(struct nx_bootmanager *pbm, sdxcboot_status *pst,
 	 * SD/eMMC is because reading the blocks in the unit 512
 	 * However, since sign data is 256 bytes, dummy data exists in 256 bytes.
 	 */
-	ret = g_sdmmcfn->sdmmc_read_sectors(pst, rsn,
+	result = g_sdmmcfn->sdmmc_read_sectors(pst, rsn,
 				1, (unsigned int*)pbm->rsa_encrypted_sha256_hash);
 error:
-	return ret;
+	return result;
 }
 
 int sdmmcboot(struct nx_bootmanager* pbm, sdxcboot_status *pbt_st, unsigned int option)
@@ -404,7 +405,8 @@ int sdmmcboot(struct nx_bootmanager* pbm, sdxcboot_status *pbt_st, unsigned int 
 	unsigned int *f_sector = (unsigned int *)&pbm->bi;
 	unsigned int sector_cnt;
 	unsigned int rsn = 0;
-	int ret = TRUE;
+	int ret;
+	int result = FALSE;
 
 	/* step 01-1. open the sd/emmc device */
 	if (TRUE != g_sdmmcfn->sdmmc_open(pbt_st, option)) {
@@ -480,7 +482,7 @@ int sdmmcboot(struct nx_bootmanager* pbm, sdxcboot_status *pbt_st, unsigned int 
 	sector_cnt = ((pbi->load_size + (SDMMC_BLOCK_LENGTH - 1))
 				/ SDMMC_BLOCK_LENGTH);
 
-	ret = g_sdmmcfn->sdmmc_read_sectors(pbt_st, rsn,
+	result = g_sdmmcfn->sdmmc_read_sectors(pbt_st, rsn,
 				sector_cnt, (unsigned int*)pbi->load_addr);
 	rsn += sector_cnt;
 
@@ -488,11 +490,11 @@ int sdmmcboot(struct nx_bootmanager* pbm, sdxcboot_status *pbt_st, unsigned int 
 	 * SD/eMMC is because reading the blocks in the unit 512
 	 * However, since sign data is 256 bytes, dummy data exists in 256 bytes.
 	 */
-	ret = g_sdmmcfn->sdmmc_read_sectors(pbt_st, rsn,
+	result = g_sdmmcfn->sdmmc_read_sectors(pbt_st, rsn,
 				1, (unsigned int*)pbm->rsa_encrypted_sha256_hash);
 
 error:
-	return ret;
+	return result;
 }
 
 unsigned int sdxcboot(struct nx_bootmanager *pbm, unsigned int option)
